@@ -1,39 +1,25 @@
-# Mantine Next Template
+## Hikma Health Admin Application
 
-Get started with Mantine + Next with just a few button clicks.
-Click `Use this template` button at the header of repository or [follow this link](https://github.com/mantinedev/mantine-next-template/generate) and
-create new repository with `@mantine` packages. Note that you have to be logged in to GitHub to generate template.
+The Hikma Health platform is a mobile electronic health record system designed for organizations working in low-resource settings to collect and access patient health information. The platform is a lightweight android application that supports offline functionality and multiple languages including Arabic, Spanish, and English. The medical workflows are designed to be intuitive and allow for efficient patient registration and data entry in low-resource, dynamic, and mobile settings.
 
-## Features
+This repository contains the client-side code for the administration app designed for user management of the Hikma mobile app. This app is built using React, Typescript and Google Material Design. The corresponding server-side code is located at https://github.com/hikmahealth/hikma-health-backend. Please feel free 
+to file feature requests and bugs at either location.
 
-This template comes with several essential features:
+Local Setup
+-----------
 
-- Server side rendering setup for Mantine
-- Color scheme is stored in cookie to avoid color scheme mismatch after hydration
-- Storybook with color scheme toggle
-- Jest with react testing library
-- ESLint setup with [eslint-config-mantine](https://github.com/mantinedev/eslint-config-mantine)
+First, run your backend repository locally. Refer to the [backend repo](https://github.com/hikmahealth/hikma-health-backend) for setup documentation.
+Fork the admin app to your organization on github.
+**Replace urls in all api calls with your ip address:**
+Change all instances of `${process.env.REACT_APP_INSTANCE_URL}` to `http://[your_ip]:8080`
 
-## npm scripts
+Open a terminal in the frontend project, and
+```
+yarn 
+```
+```
+yarn dev
+```
+The app will run in development mode. Open http://localhost:3000 to view it in the browser.
 
-### Build and dev scripts
-
-- `dev` – start dev server
-- `build` – bundle application for production
-- `export` – exports static website to `out` folder
-- `analyze` – analyzes application bundle with [@next/bundle-analyzer](https://www.npmjs.com/package/@next/bundle-analyzer)
-
-### Testing scripts
-
-- `typecheck` – checks TypeScript types
-- `lint` – runs ESLint
-- `prettier:check` – checks files with Prettier
-- `jest` – runs jest tests
-- `jest:watch` – starts jest watch
-- `test` – runs `jest`, `prettier:check`, `lint` and `typecheck` scripts
-
-### Other scripts
-
-- `storybook` – starts storybook dev server
-- `storybook:build` – build production storybook bundle to `storybook-static`
-- `prettier:write` – formats all files with Prettier
+Login with the local user that you created during the backend repository setup

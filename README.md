@@ -23,3 +23,6 @@ yarn dev
 The app will run in development mode. Open http://localhost:3000 to view it in the browser.
 
 Login with the local user that you created during the backend repository setup
+
+
+

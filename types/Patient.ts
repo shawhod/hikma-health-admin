@@ -12,6 +12,7 @@ export type Patient = {
   updatedAt: Date;
 
   // convenience fields for the data from directly from the server
+  given_name: string;
   date_of_birth: string;
   created_at: string;
   updated_at: string;

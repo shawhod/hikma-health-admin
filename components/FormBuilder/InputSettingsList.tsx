@@ -1,20 +1,48 @@
+// @ts-nocheck
 import { useEffect } from 'react';
 import { createStyles, rem, Text, TextInput, Button, Checkbox, MultiSelect } from '@mantine/core';
 import { tw } from 'twind';
 import { upperFirst, lowerCase } from 'lodash';
 import { useListState } from '@mantine/hooks';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { IconGripVertical, IconTrash} from '@tabler/icons-react';
-import { FieldOption, HHFieldBase, InputType, HHFieldWithPosition, MeasurementUnit } from '../types/Inputs';
-import { listToFieldOptions } from "../../utils/form-builder"
-import { inputIconsMap } from "../../pages/index.tsx"
+import { IconGripVertical, IconTrash } from '@tabler/icons-react';
+import {
+  FieldOption,
+  HHFieldBase,
+  InputType,
+  HHFieldWithPosition,
+  MeasurementUnit,
+  DoseUnit,
+} from '../../types/Inputs';
+import { listToFieldOptions } from '../../utils/form-builder';
 
 let YesNoOptions: FieldOption[] = [
-  { value: "yes", label: "Yes" },
-  { value: "no", label: "No" }
+  { value: 'yes', label: 'Yes' },
+  { value: 'no', label: 'No' },
 ];
 
-const measurementOptions: MeasurementUnit[] = ['cm', 'm', 'kg', 'lb', 'in', 'ft', 'mmHg', 'cmH2O', 'mmH2O', 'mmol/L', 'mg/dL', 'C', 'F', 'BPM', 'P', 'M', 'mmol/L', 'mg/dL', '%', 'units'];
+const measurementOptions: MeasurementUnit[] = [
+  'cm',
+  'm',
+  'kg',
+  'lb',
+  'in',
+  'ft',
+  'mmHg',
+  'cmH2O',
+  'mmH2O',
+  'mmol/L',
+  'mg/dL',
+  'C',
+  'F',
+  'BPM',
+  'P',
+  'M',
+  'mmol/L',
+  'mg/dL',
+  '%',
+  'units',
+];
 
 const useStyles = createStyles((theme) => ({
   item: {
@@ -55,21 +83,28 @@ const useStyles = createStyles((theme) => ({
 type DndListHandleProps = {
   data: HHFieldWithPosition[];
   onRemoveField: (id: string) => void;
-  onFieldChange: (id: string, key: string, value: any) => void
+  onFieldChange: (id: string, key: string, value: any) => void;
   onFieldOptionChange: (id: string, options: FieldOption[]) => void;
   onFieldUnitChange: (id: string, units: DoseUnit[] | false) => void;
-}
+};
 
-export function InputSettingsList({ data, onRemoveField, onFieldChange, onFieldOptionChange, onFieldUnitChange }: DndListHandleProps) {
+export function InputSettingsList({
+  data,
+  onRemoveField,
+  onFieldChange,
+  onFieldOptionChange,
+  onFieldUnitChange,
+}: DndListHandleProps) {
   const { classes, cx } = useStyles();
   const [state, handlers] = useListState(data);
 
   // On change of incoming data props, update the listState
   useEffect(() => {
     handlers.setState(data);
-  }, [data])
+  }, [data]);
 
   const items = state.map((item, index) => (
+    /*     @ts-ignore */
     <Draggable key={item.id} index={index} draggableId={item.id}>
       {(provided, snapshot) => (
         <div
@@ -80,60 +115,81 @@ export function InputSettingsList({ data, onRemoveField, onFieldChange, onFieldO
           <div {...provided.dragHandleProps} className={classes.dragHandle}>
             <IconGripVertical size="1.05rem" stroke={1.5} />
           </div>
-          <div className={tw("w-full")}>
-            <h3 className={tw("text-lg font-bold")}>{upperFirst(item.inputType)} Input</h3>
-            <TextInput label={"Name"} defaultValue={item.name} onChange={e => onFieldChange(item.id, "name", e.currentTarget.value)} />
-            <TextInput label="Description (Optional)" onChange={e => onFieldChange(item.id, "description", e.currentTarget.value)} />
+          <div className={tw('w-full')}>
+            <h3 className={tw('text-lg font-bold')}>{upperFirst(item.inputType)} Input</h3>
+            <TextInput
+              label={'Name'}
+              defaultValue={item.name}
+              onChange={(e) => onFieldChange(item.id, 'name', e.currentTarget.value)}
+            />
+            <TextInput
+              label="Description (Optional)"
+              onChange={(e) => onFieldChange(item.id, 'description', e.currentTarget.value)}
+            />
             <Text color="dimmed" size="sm">
               Type: {item.inputType}
             </Text>
 
-          {["select", "dropdown", "checkbox", "radio"].includes(item.inputType) && (
-            <>
-              <MultiSelect
-                label="Add options"
-                data={fieldOptionsUnion(YesNoOptions, item.options || [])}
-                placeholder="Select items"
-                searchable
-                value={item.options.map((option: any) => option.value)}
-                creatable
-                onChange={(value) => {
-                  const fieldOptionsArray = value.map((option: any) => ({ value: lowerCase(option), label: upperFirst(option) }))
-                  onFieldOptionChange(item.id, fieldOptionsArray)
-                }}
-                getCreateLabel={(query) => `+ Create ${query}`}
-                onCreate={(query) => {
-                  // Lower case and make camel case
-                  const newOption = { value: lowerCase(query), label: query };
-                  console.log({ newOption })
-                  onFieldOptionChange(item.id, [...item.options, newOption])
-                  // setData((current) => [...current, item]);
-                  // return item;
-                }}
-              />
-          </>
-          )}
+            {['select', 'dropdown', 'checkbox', 'radio'].includes(item.inputType) && (
+              <>
+                <MultiSelect
+                  label="Add options"
+                  data={fieldOptionsUnion(YesNoOptions, item.options || [])}
+                  placeholder="Select items"
+                  searchable
+                  value={item.options.map((option: any) => option.value)}
+                  creatable
+                  onChange={(value) => {
+                    const fieldOptionsArray = value.map((option: any) => ({
+                      value: lowerCase(option),
+                      label: upperFirst(option),
+                    }));
+                    onFieldOptionChange(item.id, fieldOptionsArray);
+                  }}
+                  getCreateLabel={(query) => `+ Create ${query}`}
+                  onCreate={(query) => {
+                    // Lower case and make camel case
+                    const newOption = { value: lowerCase(query), label: query };
+                    console.log({ newOption });
+                    onFieldOptionChange(item.id, [...item.options, newOption]);
+                    // setData((current) => [...current, item]);
+                    // return item;
+                  }}
+                />
+              </>
+            )}
 
-            {
-            item.inputType === "number" && <Checkbox
-              className={tw("py-2")}
-              onChange={(e) => onFieldUnitChange(item.id, e.currentTarget.checked ? listToFieldOptions(measurementOptions) : false)}
-              checked={item.units && item.units.length > 0}
-              label="Has Units"
-            />
-            }
+            {item.inputType === 'number' && (
+              <Checkbox
+                className={tw('py-2')}
+                onChange={(e) =>
+                  onFieldUnitChange(
+                    item.id,
+                    e.currentTarget.checked ? listToFieldOptions(measurementOptions) : false
+                  )
+                }
+                checked={item.units && item.units.length > 0}
+                label="Has Units"
+              />
+            )}
 
             <Checkbox
-              className={tw("py-2")}
-              onChange={(e) => onFieldChange(item.id, "required", e.currentTarget.checked)}
+              className={tw('py-2')}
+              onChange={(e) => onFieldChange(item.id, 'required', e.currentTarget.checked)}
               checked={item.required}
               label="Required Field"
             />
 
-            <div className={tw("pt-4")}>
-              <Button onClick={() => onRemoveField(item.id)} compact variant="subtle" color="red" leftIcon={<IconTrash size="1rem" />}>
-                 Remove 
-                </Button>
+            <div className={tw('pt-4')}>
+              <Button
+                onClick={() => onRemoveField(item.id)}
+                compact
+                variant="subtle"
+                color="red"
+                leftIcon={<IconTrash size="1rem" />}
+              >
+                Remove
+              </Button>
             </div>
           </div>
         </div>
@@ -141,16 +197,19 @@ export function InputSettingsList({ data, onRemoveField, onFieldChange, onFieldO
     </Draggable>
   ));
 
-  console.log("items", state)
+  console.log('items', state);
 
   return (
+    /*     @ts-ignore */
     <DragDropContext
       onDragEnd={({ destination, source }) =>
         handlers.reorder({ from: source.index, to: destination?.index || 0 })
       }
     >
+      {/*       @ts-ignore */}
       <Droppable droppableId="dnd-list" direction="vertical">
         {(provided) => (
+          /*       @ts-ignore */
           <div {...provided.droppableProps} ref={provided.innerRef}>
             {items}
             {provided.placeholder}
@@ -160,7 +219,6 @@ export function InputSettingsList({ data, onRemoveField, onFieldChange, onFieldO
     </DragDropContext>
   );
 }
-
 
 // Return the union of two field options arrays
 function fieldOptionsUnion(options1: FieldOption[], options2: FieldOption[]): FieldOption[] {

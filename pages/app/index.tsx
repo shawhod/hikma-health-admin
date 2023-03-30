@@ -36,9 +36,8 @@ const dashboardData = [
     title: 'Total Forms',
     value: '0',
     description: 'Total forms created in your clinic',
-  }
+  },
 ];
-
 
 const getSummaryStats = async (token: string) => {
   const response = await fetch(`${HIKMA_API}/admin_api/summary_stats`, {
@@ -50,7 +49,7 @@ const getSummaryStats = async (token: string) => {
   });
 
   return await response.json();
-}
+};
 
 type SummaryStats = {
   eventsCount: number;
@@ -58,7 +57,7 @@ type SummaryStats = {
   usersCount: number;
   formsCount: number;
   visitsCount: number;
-}
+};
 
 export default function Dashboard() {
   const [summaryStats, setSummaryStats] = useState<SummaryStats>({
@@ -84,33 +83,32 @@ export default function Dashboard() {
         setLoading(false);
       });
     }
-  }, [])
-
+  }, []);
 
   const summaryData = dashboardData.map((item) => {
     if (item.title === 'Clinic Users') {
       return {
         ...item,
         value: summaryStats.usersCount?.toLocaleString(),
-      }
+      };
     }
     if (item.title === 'Total Patients') {
       return {
         ...item,
         value: summaryStats.patientsCount?.toLocaleString(),
-      }
+      };
     }
     if (item.title === 'Total Visits') {
       return {
         ...item,
         value: summaryStats.visitsCount?.toLocaleString(),
-      }
+      };
     }
     if (item.title === 'Total Forms') {
       return {
         ...item,
         value: summaryStats.formsCount?.toLocaleString(),
-      }
+      };
     }
     return item;
   });
@@ -119,10 +117,8 @@ export default function Dashboard() {
     <AppLayout title="Dashboard">
       <DashboardStatsGrid data={summaryData} />
 
-        <div className={tw('flex justify-center my-6 w-full')}>
-          {loading && <Loader size="xl" />}
-        </div>
-      <div className={''}>
+      <div className={tw('flex justify-center my-6 w-full')}>{loading && <Loader size="xl" />}</div>
+      <div>
         <Paper shadow="xs" className={tw('h-64 flex items-center justify-center')} p="xl">
           <Title order={3}>Add your organization's important information here</Title>
         </Paper>

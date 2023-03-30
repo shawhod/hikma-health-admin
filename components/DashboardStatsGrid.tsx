@@ -50,7 +50,7 @@ const icons = {
 interface StatsGridProps {
   data: {
     title: string;
-    icon: keyof typeof icons;
+    icon: keyof typeof icons | 'user' | 'event' | 'patient' | 'form' | string;
     value: string;
     diff: number;
     description: string;
@@ -60,7 +60,7 @@ interface StatsGridProps {
 export function DashboardStatsGrid({ data }: StatsGridProps) {
   const { classes } = useStyles();
   const stats = data.map((stat) => {
-    const Icon = icons[stat.icon];
+    const Icon = icons[stat.icon as keyof typeof icons] || IconUserPlus
     const DiffIcon = stat.diff > 0 ? IconArrowUpRight : IconArrowDownRight;
 
     return (

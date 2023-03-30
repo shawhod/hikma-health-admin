@@ -49,8 +49,8 @@ export default function EditUser() {
       alert('Password must be at least 4 characters');
       return;
     }
-    if (confirm("Are you sure you want to reset this user's password?")) {
-      const token = localStorage.getItem('token');
+    if (window.confirm("Are you sure you want to reset this user's password?")) {
+      const token = localStorage.getItem('token') || "";
       setLoading(true);
       changePassword(user.email, password, token)
         .then((res) => {
@@ -68,8 +68,9 @@ export default function EditUser() {
 
   const confirmSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (confirm('Are you sure you want to update this user?')) {
+    if (window.confirm('Are you sure you want to update this user?')) {
       // submit();
+      window.alert("Method not implemented yet")
     }
   };
 

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Table, ActionIcon } from '@mantine/core';
-import {tw} from 'twind';
+import { tw } from 'twind';
 import { useRouter } from 'next/router';
 import { IconTrash, IconEdit, IconPlus } from '@tabler/icons-react';
-import {truncate} from 'lodash';
+import { truncate } from 'lodash';
 import AppLayout from '../../components/Layout';
 import { FAB } from '../../components/FAB';
 import { HHForm } from '../../types/Inputs';
@@ -27,7 +27,6 @@ const getAllForms = async (token: string): Promise<HHForm[]> => {
   return result.event_forms;
 };
 
-
 const deleteForm = async (id: string, token: string): Promise<any> => {
   const response = await fetch(`${HIKMA_API}/admin_api/delete_event_form`, {
     method: 'DELETE',
@@ -46,41 +45,38 @@ const deleteForm = async (id: string, token: string): Promise<any> => {
   return await response.json();
 };
 
-
-
 export default function FormsList() {
-    const router = useRouter();
-  const [forms, setForms] = useState<HHForm[]>([]);
+  const router = useRouter();
+  const [forms, setForms] = useState<(HHForm & { created_at: string })[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
       getAllForms(token).then((fs) => {
-        setForms(fs);
+        setForms(fs as unknown as (HHForm & { created_at: string })[]);
         setIsLoading(false);
       });
     }
   }, []);
 
-
-    const confirmDelete = (id: string) => {
-        if (confirm('Are you sure you want to delete this form?')) {
-            const token = localStorage.getItem('token') || '';
-            deleteForm(id, token).then(() => {
-                setForms(forms.filter((f) => f.id !== id));
-            }).catch((err) => {
-                alert("Error deleting form.")
-                console.error(err);
-            });
-        }
-    };
-
-
-    const openCreateNewForm = () => {
-        router.push('/app/new-form');
+  const confirmDelete = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this form?')) {
+      const token = localStorage.getItem('token') || '';
+      deleteForm(id, token)
+        .then(() => {
+          setForms(forms.filter((f) => f.id !== id));
+        })
+        .catch((err) => {
+          alert('Error deleting form.');
+          console.error(err);
+        });
     }
+  };
 
+  const openCreateNewForm = () => {
+    router.push('/app/new-form');
+  };
 
   const ths = (
     <tr>
@@ -95,14 +91,13 @@ export default function FormsList() {
     <tr key={form.id}>
       <td>{form.name}</td>
       <td>{truncate(form.description, { length: 32 })}</td>
-      <td>{form.createdAt}</td>
+      <td>{form.created_at}</td>
       <td>
-          <div className={tw('flex space-x-4')}>
-            <ActionIcon onClick={() => confirmDelete(form.id)}>
-              <IconTrash size="1rem" color="red" />
-            </ActionIcon>
-          </div>
-
+        <div className={tw('flex space-x-4')}>
+          <ActionIcon onClick={() => confirmDelete(form.id)}>
+            <IconTrash size="1rem" color="red" />
+          </ActionIcon>
+        </div>
       </td>
     </tr>
   ));
@@ -110,13 +105,13 @@ export default function FormsList() {
   console.log({ forms });
 
   return (
-      <>
-    <AppLayout title="Forms List">
-      <Table verticalSpacing="md" className={tw("my-6")} striped highlightOnHover withBorder>
-        <thead>{ths}</thead>
-        <tbody>{rows}</tbody>
-      </Table>
-    </AppLayout>
+    <>
+      <AppLayout title="Forms List">
+        <Table verticalSpacing="md" className={tw('my-6')} striped highlightOnHover withBorder>
+          <thead>{ths}</thead>
+          <tbody>{rows}</tbody>
+        </Table>
+      </AppLayout>
 
       <FAB onClick={openCreateNewForm} />
     </>

@@ -30,6 +30,7 @@ export const userRoles = ['provider', 'admin'];
 
 export default function NewUser() {
   const [user, setUser] = useState<User & { password: string }>({
+    id: '',
     name: '',
     role: 'Admin',
     email: '',
@@ -76,6 +77,7 @@ export default function NewUser() {
           <TextInput label="Email" name="email" required onChange={updateField} />
           <TextInput label="Password" name="password" required onChange={updateField} />
 
+          {/*           @ts-ignore */}
           <Button onClick={confirmSubmit} loading={loading} fullWidth>
             Submit
           </Button>

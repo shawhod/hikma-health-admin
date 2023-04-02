@@ -34,7 +34,8 @@ import {
   IconPhoto,
   IconMessageCircle,
   IconTrash,
-  IconArrowsLeftRight,
+    IconArrowsLeftRight,
+    IconReportMedical,
 } from '@tabler/icons-react';
 import { tw } from 'twind';
 import { omit, eq } from 'lodash';
@@ -53,6 +54,7 @@ import {
   OptionsField,
 } from '../../types/Inputs';
 import AppLayout from '../../components/Layout';
+import { DiagnosisSelect } from '../../components/FormBuilder/DiagnosisPicker';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
@@ -194,6 +196,23 @@ const createOptionsField = (
   };
 };
 
+const createDiagnosisField = (
+  name = 'Diagnosis',
+  description = '',
+  inputType: OptionsField['inputType'] = 'dropdown',
+  options: OptionsField['options'] = [],
+): OptionsField => {
+  return {
+    id: String(Math.random()),
+    name,
+    description,
+    inputType,
+    required: true,
+    fieldType: 'diagnosis',
+    options,
+  };
+};
+
 const createDateField = (name = '', description = '', inputType = 'date'): DateField => {
   return {
     id: String(Math.random()),
@@ -217,6 +236,7 @@ export const inputIconsMap = {
   number: <IconNumbers />,
   options: <IconList />,
   medicine: <IconMedicineSyrup />,
+  diagnosis: <IconReportMedical />,
   checkbox: <IconCheckbox />,
   date: <IconCalendar />,
 };
@@ -257,6 +277,11 @@ const inputAddButtons = (action: AddButtonProps) => [
     icon: inputIconsMap['medicine'],
     onClick: action.onClick('medicine', 'custom'),
   },
+  {
+    label: "Diagnosis",
+    icon: inputIconsMap['diagnosis'],
+    onClick: action.onClick('diagnosis', 'custom')
+  }
 ];
 
 type Action =
@@ -348,6 +373,9 @@ export default function NewFormBuilder() {
       case 'medicine':
         // setFields([...fields, createMedicineField()]);
         dispatch({ type: 'add-field', payload: createMedicineField('Medicine', '') });
+        break;
+      case 'diagnosis':
+        dispatch({ type: 'add-field', payload: createDiagnosisField() });
         break;
     }
   };
@@ -466,6 +494,8 @@ export default function NewFormBuilder() {
               );
             } else if (field.fieldType === 'medicine') {
               return <MedicineInput key={field.id} field={field} />;
+            } else if (field.fieldType === 'diagnosis') {
+              return <DiagnosisSelect key={field.id} field={field} />;
             } else {
               return null;
             }

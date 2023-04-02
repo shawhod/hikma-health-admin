@@ -130,7 +130,7 @@ export function InputSettingsList({
               Type: {item.inputType}
             </Text>
 
-            {['select', 'dropdown', 'checkbox', 'radio'].includes(item.inputType) && (
+            {['select', 'dropdown', 'checkbox', 'radio'].includes(item.inputType) && item.fieldType !== "diagnosis" && (
               <>
                 <MultiSelect
                   label="Add options"

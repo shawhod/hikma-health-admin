@@ -1,7 +1,7 @@
 // INPUT TYPES FOR CUSTOM FORMS & WORKFLOWS
 export type InputType = 'text' | 'textarea' | 'number' | 'email' | 'password' | 'date' | 'time' | 'datetime' | 'checkbox' | 'radio' | 'select' | 'file' | 'image' | 'url' | 'tel' | 'color' | 'range' | 'hidden' | 'submit' | 'reset' | 'button' | 'search' | 'month' | 'week' | 'datetime-local' | 'custom';
 
-export type FieldType = 'binary' | 'medicine' | 'dosage' | 'free-text' | 'input-group' | 'options' | 'date' | 'custom';
+export type FieldType = 'binary' | 'medicine' | 'diagnosis' | 'dosage' | 'free-text' | 'input-group' | 'options' | 'date' | 'custom';
 
 export type HHFieldBase = {
   id: string;
@@ -33,6 +33,12 @@ export type OptionsField = HHFieldBase & {
   inputType: 'checkbox' | 'radio' | 'select';
   options: FieldOption[];
 };
+
+export type DiagnosisField = HHFieldBase & {
+  fieldType: 'diagnosis';
+  inputType: 'select';
+  options: FieldOption[];
+}
 
 export type TextField = HHFieldBase & ({
   fieldType: 'free-text';
@@ -69,12 +75,13 @@ export type DateField = HHFieldBase & {
   max?: Date;
 };
 
-export type HHField = BinaryField | TextField | MedicineField | DateField | OptionsField;
+export type HHField = BinaryField | TextField | MedicineField | DiagnosisField | DateField | OptionsField;
 
 export type HHFieldWithPosition =
   | BinaryField & { position: number }
   | TextField & { position: number }
   | MedicineField & { position: number }
+  | DiagnosisField & { position: number }
   | OptionsField & { position: number }
   | DateField & { position: number };
 

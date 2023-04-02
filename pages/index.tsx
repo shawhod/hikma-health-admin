@@ -51,9 +51,7 @@ export default function Login() {
         } else {
           localStorage.setItem('token', data.token);
 
-          setTimeout(() => {
-            router.replace('/app');
-          }, 1000);
+          router.replace('/app');
         }
       })
       .catch((err) => {

@@ -192,10 +192,24 @@ export type HHFieldWithPosition =
   | (OptionsField & { position: number })
   | (DateField & { position: number });
 
+
+// Two letter iso639-2 language code
+// as seen here: https://www.loc.gov/standards/iso639-2/php/code_list.php
+export type Language = 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'ru' | 'zh' | 'ja' | 'ar' | 'hi' | 'bn' | 'pa' | 'jv' | 'ko' | 'vi' | 'ta' | 'ur' | 'fa' | 'tr' | 'pl' | 'uk' | 'ro' | 'nl' | 'hu' | 'el' | 'cs' | 'sv' | 'ca' | 'fi' | 'he' | 'no' | 'id' | 'ms' | 'da' | 'sk' | 'lt' | 'hr' | 'sr' | 'sl' | 'et' | 'lv' | 'th' | 'az' | 'hy' | 'ka' | 'eu' | 'gl' | 'be' | 'mk' | 'bs' | 'is' | 'sq' | 'kk' | 'ky' | 'tg' | 'uz' | 'tk' | 'mn' | 'ja' | 'ko' | 'zh' | 'vi' | 'th' | 'lo' | 'km' | 'my' | 'km' | 'my' | 'ne' | 'si' | 'am' | 'ti' | 'so' | 'sw' | 'rw' | 'ny' | 'mg' | 'eo' | 'cy' | 'gd' | 'ga' | 'gd' | 'ga' | 'af' | 'zu' | 'xh' | 'st' | 'tn' | 'ts' | 'ss' | 've' | 'nr' | 'wo' | 'fy'
+
+export type LanguageOption = {
+  label: string;
+  value: Language;
+}
+
+
+
+
 export type HHForm = {
   id: string;
   name: string;
   description: string;
+  language: Language;
   fields: HHField[];
   createdAt: Date;
   updatedAt: Date;

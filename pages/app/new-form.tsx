@@ -55,6 +55,7 @@ import {
 } from '../../types/Inputs';
 import AppLayout from '../../components/Layout';
 import { DiagnosisSelect } from '../../components/FormBuilder/DiagnosisPicker';
+import { languageOptions } from '../../data/languages';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
@@ -348,6 +349,7 @@ export default function NewFormBuilder() {
   const [fields, setFields] = useState([] as FieldType[]);
   const [state, dispatch] = useReducer(reducer, {});
   const [formName, setFormName] = useState('');
+  const [language, setLanguage] = useState('en');
   const [formDescription, setFormDescription] = useState('');
   const [loadingSave, setLoadingSave] = useState(false);
 
@@ -410,12 +412,11 @@ export default function NewFormBuilder() {
       id: uuidV1(),
       name: formName,
       description: formDescription,
+      language,
       metadata: JSON.stringify(dndData),
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-
-    console.log({ form });
 
     setLoadingSave(true);
 
@@ -454,6 +455,14 @@ export default function NewFormBuilder() {
             onChange={(e) => setFormName(e.target.value)}
             placeholder="Form Name"
           />
+      <Select
+      label="Form Language"
+    searchable
+    onChange={setLanguage}
+            className={tw('mb-4')}
+      placeholder="Pick one"
+      data={languageOptions}
+    />
           <Textarea
             label="Form Description"
             className={tw('mb-4')}
@@ -474,7 +483,7 @@ export default function NewFormBuilder() {
             Save Form
           </Button>
         </Grid.Col>
-        <Grid.Col span={7} className={tw(`space-y-4 px-12 py-8`)}>
+      <Grid.Col dir={isRtlLanguage(language) ? "rtl" : "ltr"} span={7} className={tw(`space-y-4 px-12 py-8`)}>
           <h4 className={tw('text-2xl mb-2')}>{formName}</h4>
           {Object.values(state).map((field) => {
             if (field.fieldType === 'options') {
@@ -601,3 +610,9 @@ const OptionsInput = React.memo(
   },
   (pres, next) => eq(pres.field, next.field)
 );
+
+
+const isRtlLanguage = (language: string) => {
+  console.log('Language: ', language === 'ar');
+  return language === 'ar'
+}

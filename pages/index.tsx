@@ -45,8 +45,8 @@ export default function Login() {
     })
       .then((res) => res.json())
       .then((data) => {
-        setIsLoading(false);
         if (data.error) {
+          setIsLoading(false);
           alert(data.error);
         } else {
           localStorage.setItem('token', data.token);

@@ -1,7 +1,42 @@
 // INPUT TYPES FOR CUSTOM FORMS & WORKFLOWS
-export type InputType = 'text' | 'textarea' | 'number' | 'email' | 'password' | 'date' | 'time' | 'datetime' | 'checkbox' | 'radio' | 'select' | 'file' | 'image' | 'url' | 'tel' | 'color' | 'range' | 'hidden' | 'submit' | 'reset' | 'button' | 'search' | 'month' | 'week' | 'datetime-local' | 'custom';
+export type InputType =
+  | 'text'
+  | 'textarea'
+  | 'number'
+  | 'email'
+  | 'password'
+  | 'date'
+  | 'time'
+  | 'datetime'
+  | 'checkbox'
+  | 'radio'
+  | 'select'
+  | 'file'
+  | 'image'
+  | 'url'
+  | 'tel'
+  | 'color'
+  | 'range'
+  | 'hidden'
+  | 'submit'
+  | 'reset'
+  | 'button'
+  | 'search'
+  | 'month'
+  | 'week'
+  | 'datetime-local'
+  | 'custom';
 
-export type FieldType = 'binary' | 'medicine' | 'diagnosis' | 'dosage' | 'free-text' | 'input-group' | 'options' | 'date' | 'custom';
+export type FieldType =
+  | 'binary'
+  | 'medicine'
+  | 'diagnosis'
+  | 'dosage'
+  | 'free-text'
+  | 'input-group'
+  | 'options'
+  | 'date'
+  | 'custom';
 
 export type HHFieldBase = {
   id: string;
@@ -11,11 +46,61 @@ export type HHFieldBase = {
 };
 
 export type DurationUnit = 'hours' | 'days' | 'weeks' | 'months' | 'years';
-export type MeasurementUnit = 'cm' | 'm' | 'kg' | 'lb' | 'in' | 'ft' | 'mmHg' | 'cmH2O' | 'mmH2O' | 'mmol/L' | 'mg/dL' | 'C' | 'F' | 'BPM' | 'P' | 'M' | 'mmol/L' | 'mg/dL' | '%' | 'units';
+export type MeasurementUnit =
+  | 'cm'
+  | 'm'
+  | 'kg'
+  | 'lb'
+  | 'in'
+  | 'ft'
+  | 'mmHg'
+  | 'cmH2O'
+  | 'mmH2O'
+  | 'mmol/L'
+  | 'mg/dL'
+  | 'C'
+  | 'F'
+  | 'BPM'
+  | 'P'
+  | 'M'
+  | 'mmol/L'
+  | 'mg/dL'
+  | '%'
+  | 'units';
 export type DoseUnit = 'mg' | 'g' | 'mcg' | 'mL' | 'L' | 'units';
 
-export type MedicineRoute = 'oral' | 'sublingual' | 'rectal' | 'topical' | 'inhalation' | 'intravenous' | 'intramuscular' | 'intradermal' | 'subcutaneous' | 'nasal' | 'ophthalmic' | 'otic' | 'vaginal' | 'transdermal' | 'other';
-export type MedicineForm = 'tablet' | 'syrup' | 'ampule' | 'suppository' | 'cream' | 'drops' | 'bottle' | 'spray' | 'gel' | 'lotion' | 'inhaler' | 'capsule' | 'injection' | 'patch' | 'other';
+export type MedicineRoute =
+  | 'oral'
+  | 'sublingual'
+  | 'rectal'
+  | 'topical'
+  | 'inhalation'
+  | 'intravenous'
+  | 'intramuscular'
+  | 'intradermal'
+  | 'subcutaneous'
+  | 'nasal'
+  | 'ophthalmic'
+  | 'otic'
+  | 'vaginal'
+  | 'transdermal'
+  | 'other';
+export type MedicineForm =
+  | 'tablet'
+  | 'syrup'
+  | 'ampule'
+  | 'suppository'
+  | 'cream'
+  | 'drops'
+  | 'bottle'
+  | 'spray'
+  | 'gel'
+  | 'lotion'
+  | 'inhaler'
+  | 'capsule'
+  | 'injection'
+  | 'patch'
+  | 'other';
 
 export type FieldOption = {
   label: string;
@@ -38,19 +123,23 @@ export type DiagnosisField = HHFieldBase & {
   fieldType: 'diagnosis';
   inputType: 'select';
   options: FieldOption[];
-}
+};
 
-export type TextField = HHFieldBase & ({
-  fieldType: 'free-text';
-  inputType: 'text' | 'number' | 'email' | 'password' | 'tel';
-  length: 'short';
-  units?: DoseUnit[] | DurationUnit[];
-} | {
-  fieldType: 'free-text';
-  inputType: 'textarea';
-  length: 'long';
-  units?: DoseUnit[] | DurationUnit[];
-});
+export type TextField = HHFieldBase &
+  (
+    | {
+        fieldType: 'free-text';
+        inputType: 'text' | 'number' | 'email' | 'password' | 'tel';
+        length: 'short';
+        units?: DoseUnit[] | DurationUnit[];
+      }
+    | {
+        fieldType: 'free-text';
+        inputType: 'textarea';
+        length: 'long';
+        units?: DoseUnit[] | DurationUnit[];
+      }
+  );
 
 export type MedicineField = HHFieldBase & {
   fieldType: 'medicine';
@@ -65,7 +154,19 @@ export type MedicineField = HHFieldBase & {
     doseUnits: DoseUnit;
     duration: TextField;
     durationUnits: DurationUnit;
-  }
+  };
+};
+
+type MedicationEntry = {
+  name: string;
+  route: MedicineRoute;
+  form: MedicineForm;
+  frequency: number;
+  intervals: number;
+  dose: number;
+  doseUnits: DoseUnit;
+  duration: number;
+  durationUnits: DurationUnit;
 };
 
 export type DateField = HHFieldBase & {
@@ -75,15 +176,21 @@ export type DateField = HHFieldBase & {
   max?: Date;
 };
 
-export type HHField = BinaryField | TextField | MedicineField | DiagnosisField | DateField | OptionsField;
+export type HHField =
+  | BinaryField
+  | TextField
+  | MedicineField
+  | DiagnosisField
+  | DateField
+  | OptionsField;
 
 export type HHFieldWithPosition =
-  | BinaryField & { position: number }
-  | TextField & { position: number }
-  | MedicineField & { position: number }
-  | DiagnosisField & { position: number }
-  | OptionsField & { position: number }
-  | DateField & { position: number };
+  | (BinaryField & { position: number })
+  | (TextField & { position: number })
+  | (MedicineField & { position: number })
+  | (DiagnosisField & { position: number })
+  | (OptionsField & { position: number })
+  | (DateField & { position: number });
 
 export type HHForm = {
   id: string;

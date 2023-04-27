@@ -439,6 +439,7 @@ export default function NewFormBuilder() {
         console.log(response);
       })
       .catch(function (error) {
+        alert("Error saving form. Please try signing in first.")
         setLoadingSave(false);
         console.log(error);
       });
@@ -461,6 +462,7 @@ export default function NewFormBuilder() {
     onChange={setLanguage}
             className={tw('mb-4')}
       placeholder="Pick one"
+    value={language}
       data={languageOptions}
     />
           <Textarea

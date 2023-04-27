@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, ActionIcon } from '@mantine/core';
+import { Table, ActionIcon, Loader } from '@mantine/core';
 import { tw } from 'twind';
 import { useRouter } from 'next/router';
 import { IconTrash, IconEdit, IconPlus } from '@tabler/icons-react';
@@ -111,6 +111,10 @@ export default function FormsList() {
           <thead>{ths}</thead>
           <tbody>{rows}</tbody>
         </Table>
+
+        <div className={tw('flex justify-center my-6 w-full')}>
+          {isLoading && <Loader size="xl" />}
+        </div>
       </AppLayout>
 
       <FAB onClick={openCreateNewForm} />

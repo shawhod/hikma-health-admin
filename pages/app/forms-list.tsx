@@ -129,7 +129,7 @@ export default function FormsList() {
     }
   };
 
-  const toggleFormField = (id: string, field: string) => (event) => {
+  const toggleFormField = (id: string, field: string) => (event: any) => {
     console.log(id, field, event.target.checked)
     const token = localStorage.getItem('token') || '';
     axios
@@ -211,7 +211,7 @@ export default function FormsList() {
             <div className={tw("flex flex-wrap gap-3")}>
               {
                 filteredTemplates.map((form) => (
-                  <div onClick={confirmCreateForm(form)} className={tw('shadow-sm border border-gray-200 dark:border-gray-700 rounded p-2 hover:cursor-pointer hover:shadow-xl')} key={form.id}>
+                  <div onClick={confirmCreateForm(form as any)} className={tw('shadow-sm border border-gray-200 dark:border-gray-700 rounded p-2 hover:cursor-pointer hover:shadow-xl')} key={form.id}>
                     <h4 className={tw('text-md')}>{loadingFormTemplate === form.name ? "loading ...." : form.name}</h4>
                   </div>
                 ))

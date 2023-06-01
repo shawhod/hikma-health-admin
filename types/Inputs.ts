@@ -128,17 +128,17 @@ export type DiagnosisField = HHFieldBase & {
 export type TextField = HHFieldBase &
   (
     | {
-        fieldType: 'free-text';
-        inputType: 'text' | 'number' | 'email' | 'password' | 'tel';
-        length: 'short';
-        units?: DoseUnit[] | DurationUnit[];
-      }
+      fieldType: 'free-text';
+      inputType: 'text' | 'number' | 'email' | 'password' | 'tel';
+      length: 'short';
+      units?: DoseUnit[] | DurationUnit[];
+    }
     | {
-        fieldType: 'free-text';
-        inputType: 'textarea';
-        length: 'long';
-        units?: DoseUnit[] | DurationUnit[];
-      }
+      fieldType: 'free-text';
+      inputType: 'textarea';
+      length: 'long';
+      units?: DoseUnit[] | DurationUnit[];
+    }
   );
 
 export type MedicineField = HHFieldBase & {
@@ -210,6 +210,8 @@ export type HHForm = {
   name: string;
   description: string;
   language: Language;
+  is_editable: boolean;
+  is_snapshot_form: boolean;
   fields: HHField[];
   createdAt: Date;
   updatedAt: Date;

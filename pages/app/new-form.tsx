@@ -34,8 +34,8 @@ import {
   IconPhoto,
   IconMessageCircle,
   IconTrash,
-    IconArrowsLeftRight,
-    IconReportMedical,
+  IconArrowsLeftRight,
+  IconReportMedical,
 } from '@tabler/icons-react';
 import { tw } from 'twind';
 import { omit, eq } from 'lodash';
@@ -351,6 +351,8 @@ export default function NewFormBuilder() {
   const [formName, setFormName] = useState('');
   const [language, setLanguage] = useState('en');
   const [formDescription, setFormDescription] = useState('');
+  const [formIsEditable, setFormIsEditable] = useState(true)
+  const [formIsSnapshot, setFormIsSnapshot] = useState(false)
   const [loadingSave, setLoadingSave] = useState(false);
 
   const addField = (fieldType: FieldType, inputType: InputType) => () => {
@@ -413,6 +415,8 @@ export default function NewFormBuilder() {
       name: formName,
       description: formDescription,
       language,
+      is_editable: formIsEditable,
+      is_snapshot_form: formIsSnapshot,
       metadata: JSON.stringify(dndData),
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -433,12 +437,12 @@ export default function NewFormBuilder() {
           },
         }
       )
-      .then(function (response) {
+      .then(function(response) {
         alert('Form saved!');
         setLoadingSave(false);
         console.log(response);
       })
-      .catch(function (error) {
+      .catch(function(error) {
         alert("Error saving form. Please try signing in first.")
         setLoadingSave(false);
         console.log(error);
@@ -456,21 +460,26 @@ export default function NewFormBuilder() {
             onChange={(e) => setFormName(e.target.value)}
             placeholder="Form Name"
           />
-      <Select
-      label="Form Language"
-    searchable
-    onChange={setLanguage}
+          <Select
+            label="Form Language"
+            searchable
+            onChange={setLanguage}
             className={tw('mb-4')}
-      placeholder="Pick one"
-    value={language}
-      data={languageOptions}
-    />
+            placeholder="Pick one"
+            value={language}
+            data={languageOptions}
+          />
           <Textarea
             label="Form Description"
             className={tw('mb-4')}
             onChange={(e) => setFormDescription(e.target.value)}
             placeholder="Form Description"
           />
+          <Checkbox checked={formIsEditable} label="This form can be edited/updated after being submitted by clinicians" className={tw('mb-4')} onChange={(event) => setFormIsEditable(event.currentTarget.checked)} />
+          
+          <Checkbox checked={formIsSnapshot} label="This form should appear on the quick snapshot view of the patient file" className={tw('mb-4')} onChange={(event) => setFormIsSnapshot(event.currentTarget.checked)} />
+
+
           <InputSettingsList
             data={dndData}
             onRemoveField={handleFieldRemove}
@@ -485,7 +494,7 @@ export default function NewFormBuilder() {
             Save Form
           </Button>
         </Grid.Col>
-      <Grid.Col dir={isRtlLanguage(language) ? "rtl" : "ltr"} span={7} className={tw(`space-y-4 px-12 py-8`)}>
+        <Grid.Col dir={isRtlLanguage(language) ? "rtl" : "ltr"} span={7} className={tw(`space-y-4 px-12 py-8`)}>
           <h4 className={tw('text-2xl mb-2')}>{formName}</h4>
           {Object.values(state).map((field) => {
             if (field.fieldType === 'options') {

@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Table, ActionIcon, Loader } from '@mantine/core';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Table, ActionIcon, Loader, Checkbox } from '@mantine/core';
 import { tw } from 'twind';
+import { v1 as uuidV1 } from 'uuid';
 import { useRouter } from 'next/router';
 import { IconTrash, IconEdit, IconPlus } from '@tabler/icons-react';
-import { truncate } from 'lodash';
+import { differenceBy, omit, pick, truncate } from 'lodash';
 import AppLayout from '../../components/Layout';
 import { FAB } from '../../components/FAB';
 import { HHForm } from '../../types/Inputs';
+import hikmaFormTemplates from '../../data/hikma-form-templates';
+import axios from 'axios';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
@@ -49,16 +52,68 @@ export default function FormsList() {
   const router = useRouter();
   const [forms, setForms] = useState<(HHForm & { created_at: string })[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [loadingFormTemplate, setLoadingFormTemplate] = useState<string>("")
+
+
+  const fetchAllForms = (token: string) => getAllForms(token).then((fs) => {
+    setForms(fs as unknown as (HHForm & { created_at: string })[]);
+    setIsLoading(false);
+  });
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
-      getAllForms(token).then((fs) => {
-        setForms(fs as unknown as (HHForm & { created_at: string })[]);
-        setIsLoading(false);
-      });
-    }
+    if (token) fetchAllForms(token)
   }, []);
+
+  // Filter out from the recommendations any forms that share a name with forms created by the organization
+  const filteredTemplates = useMemo(() => {
+    if (isLoading) {
+      return []
+    } else {
+      const formNames = forms.map(f => f.name)
+      return hikmaFormTemplates.filter(f => !formNames.includes(f.name))
+    }
+  }, [forms.length])
+
+  const confirmCreateForm = (form: HHForm) => () => {
+    if (window.confirm("Are you sure you want to create this form from this template?")) {
+      setLoadingFormTemplate(form.name)
+      const token = localStorage.getItem("token")
+      const formObj = {
+        ...pick(form, ["name", "description", "language", "metadata", "is_editable", "is_snapshot_form"]),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        id: uuidV1(),
+      }
+      axios
+        .post(
+          `${HIKMA_API}/admin_api/save_event_form`,
+          {
+            event_form: formObj,
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: String(token),
+            },
+          }
+        )
+        .then(function(response) {
+          alert('Form created!');
+          setIsLoading(true)
+          fetchAllForms(String(token))
+          console.log(response);
+        })
+        .catch(function(error) {
+          alert("Error creating form. Please try signing out and signing back in.")
+          console.log(error);
+        }).finally(() => {
+
+          setLoadingFormTemplate("")
+        })
+
+    }
+  }
 
   const confirmDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this form?')) {
@@ -74,12 +129,46 @@ export default function FormsList() {
     }
   };
 
+  const toggleFormField = (id: string, field: string) => (event) => {
+    console.log(id, field, event.target.checked)
+    const token = localStorage.getItem('token') || '';
+    axios
+      .post(
+        `${HIKMA_API}/admin_api/update_event_form`,
+        {
+          id,
+          updates: { [field]: event.target.checked },
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: String(token),
+          },
+        }
+      ).then(res => {
+        setForms(forms => forms.map(form => {
+          if (form.id === id) {
+            return {
+              ...form,
+              [field]: event.target.checked
+            }
+          }
+          return form
+        }))
+      }).catch(error => {
+        alert("Error updating form")
+        console.error(error)
+      })
+  }
+
   const openCreateNewForm = () => {
     router.push('/app/new-form');
   };
 
   const ths = (
     <tr>
+      <th>Editable ?</th>
+      <th>Show Snapshot ?</th>
       <th>Form Name</th>
       <th>Description</th>
       <th>Created At</th>
@@ -89,6 +178,12 @@ export default function FormsList() {
 
   const rows = forms.map((form) => (
     <tr key={form.id}>
+      <td>
+        <Checkbox checked={form.is_editable} onChange={toggleFormField(form.id, "is_editable")} />
+      </td>
+      <td>
+        <Checkbox checked={form.is_snapshot_form} onChange={toggleFormField(form.id, "is_snapshot_form")} />
+      </td>
       <td>{form.name}</td>
       <td>{truncate(form.description, { length: 32 })}</td>
       <td>{form.created_at}</td>
@@ -107,6 +202,23 @@ export default function FormsList() {
   return (
     <>
       <AppLayout title="Forms List">
+        {
+          filteredTemplates.length > 0 &&
+          <div>
+            <h3 className={tw("text-lg")}>Click to install recommended form</h3>
+
+
+            <div className={tw("flex flex-wrap gap-3")}>
+              {
+                filteredTemplates.map((form) => (
+                  <div onClick={confirmCreateForm(form)} className={tw('shadow-sm border border-gray-200 dark:border-gray-700 rounded p-2 hover:cursor-pointer hover:shadow-xl')} key={form.id}>
+                    <h4 className={tw('text-md')}>{loadingFormTemplate === form.name ? "loading ...." : form.name}</h4>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        }
         <Table verticalSpacing="md" className={tw('my-6')} striped highlightOnHover withBorder>
           <thead>{ths}</thead>
           <tbody>{rows}</tbody>

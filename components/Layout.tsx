@@ -50,7 +50,7 @@ const navLinks = [
     ],
   },
   { label: 'Forms', icon: IconForms, link: '/app/forms-list' },
-  { label: 'Settings', icon: IconAdjustments, link: '/app/settings' },
+  // { label: 'Settings', icon: IconAdjustments, link: '/app/settings' },
   { label: 'Export Data', icon: IconAdjustments, link: '/app/exports' },
 ];
 

@@ -73,7 +73,7 @@ export default function FormsList() {
       const formNames = forms.map(f => f.name)
       return hikmaFormTemplates.filter(f => !formNames.includes(f.name))
     }
-  }, [forms.length])
+  }, [forms.length, isLoading])
 
   const confirmCreateForm = (form: HHForm) => () => {
     if (window.confirm("Are you sure you want to create this form from this template?")) {

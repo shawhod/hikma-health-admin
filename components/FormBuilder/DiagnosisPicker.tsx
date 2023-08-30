@@ -10,8 +10,8 @@ type Props = {
 export function DiagnosisSelect({ field }: Props) {
   const [data, setData] = useState(
     icd10.map((item) => ({
-      value: `${item.desc} (${item.code}`,
-      label: `${item.desc} (${item.code}`,
+      value: `${item.desc} (${item.code})`,
+      label: `${item.desc} (${item.code})`,
     }))
   );
 

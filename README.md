@@ -3,7 +3,8 @@
 </p>
 
 # Hikma Health Admin Application
-The Hikma Health platform is a mobile electronic health record system designed for organizations working in low-resource settings to collect and access patient health information. The repository contains the mobile application (Android tested, iOS support can be includes) that supports offline functionality, thousands of patients and multiple languages including Arabic, Spanish, and English. Other languages can be added trivially on the mobile application.
+The Hikma Health platform is a mobile electronic health record system designed for organizations working in low-resource settings to collect and access patient health information. 
+The repository contains the admin web application which is a portal for management of the clinic, its users and patients. Additional functionality can also be added easily.
 
 The platform is designed to be intuitive and allow for efficient patient workflows for patient registration, data entry, and data download. You can see a user demo here: https://drive.google.com/file/d/1ssBdEPShWCu3ZXNCXnoodbwWgqlTncJb/view?usp=drive_link
 

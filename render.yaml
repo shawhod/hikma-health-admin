@@ -3,15 +3,10 @@
 services:
   - type: web
     name: 'hikma-health-admin'
-    runtime: docker
-    buildCommand: |
-      # Build the Next.js application
-      npm install
-      npm run build
+    env: node
+    buildCommand: npm install; npm run build
 
-    startCommand: |
-      # Start the Next.js application
-      npm start
+    startCommand: npm start
 
     envVars:
       - key: NEXT_PUBLIC_HIKMA_API

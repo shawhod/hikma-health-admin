@@ -3,6 +3,7 @@
 services:
   - type: web
     name: 'hikma-health-admin'
+    runtime: docker
     buildCommand: |
       # Build the Next.js application
       npm install

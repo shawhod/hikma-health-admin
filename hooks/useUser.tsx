@@ -15,6 +15,7 @@ const fetcher = (url: string, token: string) =>
 export function useUser(token: string) {
   const { data, error, mutate } = useSWR<User | null, Error>(
     [`${HIKMA_API}/admin_api/is_authenticated`, token],
+    // @ts-ignore
     fetcher
   );
 
@@ -32,7 +33,7 @@ export function useAuthStatus() {
 
   useEffect(() => {
     const token = localStorage.getItem('token') || "";
-      setLoading(true);
+    setLoading(true);
     if (token) {
       fetch(`${HIKMA_API}/admin_api/is_authenticated`, {
         method: 'GET',
@@ -44,8 +45,8 @@ export function useAuthStatus() {
           return res.json();
         })
         .then((data) => {
-            console.log("DATAL ", data)
-            if (data && data.message.toLowerCase() === 'ok') {
+          console.log("DATAL ", data)
+          if (data && data.message.toLowerCase() === 'ok') {
             setAuthenticated(true);
           }
           setLoading(false);

@@ -16,6 +16,12 @@ The admin app is a web only application.
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
+
+[![Deploy to DigitalOcean](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/hikmahealth/hikma-health-admin/tree/main)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fhikmahealth%2Fhikma-health-admin&env=NEXT_PUBLIC_HIKMA_API&project-name=hikma-health-admin)
+
 ## Get started locally
 
 Clone the project
@@ -91,6 +97,7 @@ Features on the roadmap represent the vision for the admin portal over the comin
 - [ ]  Support patient search
 - [ ]  Support pagination in patient view
 - [ ]  Improve documentation
+- [ ]  Improve deployment button documentation
 
 ## License
 

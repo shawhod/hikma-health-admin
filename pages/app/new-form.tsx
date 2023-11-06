@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useReducer } from 'react';
+import React, { useState, useReducer, useEffect } from 'react';
 import {
   Menu,
   Button,
@@ -28,7 +28,6 @@ import {
   IconList,
   IconCheckbox,
   IconMedicineSyrup,
-  IconSearch,
   IconDatabase,
   IconCalendar,
   IconPhoto,
@@ -56,6 +55,7 @@ import {
 import AppLayout from '../../components/Layout';
 import { DiagnosisSelect } from '../../components/FormBuilder/DiagnosisPicker';
 import { languageOptions } from '../../data/languages';
+import { useRouter } from 'next/router';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
@@ -285,21 +285,35 @@ const inputAddButtons = (action: AddButtonProps) => [
   }
 ];
 
+type State = {
+  [id: string]: HHFieldWithPosition;
+};
+
 type Action =
+  /** Method used to override all internal fields with new fields. usefull for syncing with server/db */
+  | { type: "set-form-state", payload: { fields: HHFieldWithPosition[] } }
   | { type: 'add-field'; payload: HHFieldWithPosition }
   | { type: 'remove-field'; payload: string }
+  /** For a drop down, update its options that are rendered in a select */
   | { type: 'set-dropdown-options'; payload: { id: string; value: FieldOption[] } }
   | { type: 'set-field-key-value'; payload: { id: string; key: string; value: any } }
   | { type: 'add-units'; payload: { id: string; value: DoseUnit[] } }
   | { type: 'remove-units'; payload: { id: string } };
 
-type State = {
-  [id: string]: HHFieldWithPosition;
-};
 
 const reducer = (state: State, action: Action) => {
   console.log('REDUCER: ', action.payload);
   switch (action.type) {
+    case "set-form-state":
+      const { fields } = action.payload;
+      const formState = fields.reduce((prev, curr) => {
+        return {
+          ...prev,
+          [curr.id]: curr
+        }
+      }, {})
+      console.log({ formState })
+      return formState;
     case 'add-field':
       return {
         ...state,
@@ -346,6 +360,7 @@ const reducer = (state: State, action: Action) => {
 };
 
 export default function NewFormBuilder() {
+  const router = useRouter()
   const [fields, setFields] = useState([] as FieldType[]);
   const [state, dispatch] = useReducer(reducer, {});
   const [formName, setFormName] = useState('');
@@ -354,6 +369,47 @@ export default function NewFormBuilder() {
   const [formIsEditable, setFormIsEditable] = useState(true)
   const [formIsSnapshot, setFormIsSnapshot] = useState(false)
   const [loadingSave, setLoadingSave] = useState(false);
+
+
+  const params = new URLSearchParams(window.location.search)
+  const formId = params.get("formId")
+
+  const [loadingForm, setLoadingForm] = useState(formId && formId.length > 5);
+
+
+  /** If there is a formID, then we are editing a form, fetch this form */
+  useEffect(() => {
+    if (!formId) return;
+    const token = localStorage.getItem("token")
+    axios
+      .get(
+        `${HIKMA_API}/admin_api/get_event_form?id=${formId}`,
+
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: String(token),
+          },
+        }
+      ).then((res) => {
+        if (!res.data?.event_form) {
+          alert("This form does not seem to exist. Contact support.");
+          return;
+        }
+        const event_form = res.data?.event_form
+        const { description, name, is_editable, is_snapshot_form, language } = event_form
+        dispatch({ type: "set-form-state", payload: { fields: event_form?.metadata || [] } })
+        console.log({ form: res.data }, name, description)
+        setFormDescription(description)
+        setFormIsEditable(is_editable);
+        setFormName(name)
+        setFormIsSnapshot(is_snapshot_form)
+      })
+      .catch(console.error).finally(() => {
+      setLoadingForm(false);
+    })
+
+  }, [formId])
 
   const addField = (fieldType: FieldType, inputType: InputType) => () => {
     console.log({ fieldType, inputType });
@@ -404,6 +460,7 @@ export default function NewFormBuilder() {
     dispatch({ type: 'add-units', payload: { id, value: units } });
   };
 
+  // console.log({state})
   const dndData = Object.values(state).map((field) => ({
     ...field,
   }));
@@ -411,7 +468,8 @@ export default function NewFormBuilder() {
   const handleSaveForm = () => {
     if (loadingSave) return;
     const form = {
-      id: uuidV1(),
+      // if the formId exists, use that one. the backend will update the value
+      id: formId ? formId : uuidV1(),
       name: formName,
       description: formDescription,
       language,
@@ -423,25 +481,50 @@ export default function NewFormBuilder() {
     };
 
     setLoadingSave(true);
+    const token = localStorage.getItem('token') || '';
 
-    axios
-      .post(
-        `${HIKMA_API}/admin_api/save_event_form`,
-        {
-          event_form: form,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: String(localStorage.getItem('token')),
+    let result: Promise<any>
+
+
+    if (formId && formId.length > 5) {
+      // a form is being edited.
+      result = axios
+        .post(
+          `${HIKMA_API}/admin_api/update_event_form`,
+          {
+            id: formId,
+            updates: {
+              ...omit(form, ["createdAt", "id", "updatedAt"]),
+            },
           },
-        }
-      )
-      .then(function(response) {
-        alert('Form saved!');
-        setLoadingSave(false);
-        console.log(response);
-      })
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: String(token),
+            },
+          }
+        )
+    } else {
+
+      result = axios
+        .post(
+          `${HIKMA_API}/admin_api/save_event_form`,
+          {
+            event_form: form,
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: String(token),
+            },
+          }
+        )
+    }
+    result.then(function(response) {
+      alert('Form saved!');
+      setLoadingSave(false);
+      console.log(response);
+    })
       .catch(function(error) {
         alert("Error saving form. Please try signing in first.")
         setLoadingSave(false);
@@ -449,8 +532,11 @@ export default function NewFormBuilder() {
       });
   };
 
+
+  console.log({ state })
+
   return (
-    <AppLayout title="Form Builder">
+    <AppLayout title="Form Builder" isLoading={loadingForm}>
       <Grid className={tw('m-0 ')} gap="4">
         <Grid.Col span={5} className={tw('overflow-y-scroll h-screen px-2 pt-4')}>
           {/*           <h4 className={tw('text-2xl mb-2')}>Form Builder</h4> */}
@@ -458,6 +544,7 @@ export default function NewFormBuilder() {
             label="Form Title"
             className={tw('mb-4')}
             onChange={(e) => setFormName(e.target.value)}
+            value={formName}
             placeholder="Form Name"
           />
           <Select
@@ -471,13 +558,24 @@ export default function NewFormBuilder() {
           />
           <Textarea
             label="Form Description"
+            value={formDescription}
             className={tw('mb-4')}
             onChange={(e) => setFormDescription(e.target.value)}
             placeholder="Form Description"
           />
-          <Checkbox checked={formIsEditable} label="This form can be edited/updated after being submitted by clinicians" className={tw('mb-4')} onChange={(event) => setFormIsEditable(event.currentTarget.checked)} />
-          
-          <Checkbox checked={formIsSnapshot} label="This form should appear on the quick snapshot view of the patient file" className={tw('mb-4')} onChange={(event) => setFormIsSnapshot(event.currentTarget.checked)} />
+          <Checkbox
+            checked={formIsEditable}
+            label="This form can be edited/updated after being submitted by clinicians"
+            className={tw('mb-4')}
+            onChange={(event) => setFormIsEditable(event.currentTarget.checked)}
+          />
+
+          <Checkbox
+            checked={formIsSnapshot}
+            label="This form should appear on the quick snapshot view of the patient file"
+            className={tw('mb-4')}
+            onChange={(event) => setFormIsSnapshot(event.currentTarget.checked)}
+          />
 
 
           <InputSettingsList
@@ -561,9 +659,10 @@ const WithUnits = ({
   );
 };
 
-const FreeTextInput = React.memo(
+
+
+export const FreeTextInput = React.memo(
   ({ field }: FreeTextInputProps) => {
-    console.log({ field });
     const inputProps = {
       placeholder: field.placeholder,
       label: field.name,
@@ -593,7 +692,7 @@ type OptionsInputProps = {
   field: HHFieldWithPosition | HHField;
 };
 
-const OptionsInput = React.memo(
+export const OptionsInput = React.memo(
   ({ field }: OptionsInputProps) => {
     const inputProps = {
       placeholder: field.placeholder,

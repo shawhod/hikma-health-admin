@@ -75,6 +75,10 @@ export default function FormsList() {
     }
   }, [forms.length, isLoading])
 
+
+  /**
+  For the given form templates, confirm the creation of them
+  */
   const confirmCreateForm = (form: HHForm) => () => {
     if (window.confirm("Are you sure you want to create this form from this template?")) {
       setLoadingFormTemplate(form.name)
@@ -115,6 +119,11 @@ export default function FormsList() {
     }
   }
 
+  const openFormEdit = (form: HHForm) => {
+    router.push('/app/new-form', {
+      query: { formId: form.id }
+    });
+  }
   const confirmDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this form?')) {
       const token = localStorage.getItem('token') || '';
@@ -191,6 +200,9 @@ export default function FormsList() {
         <div className={tw('flex space-x-4')}>
           <ActionIcon onClick={() => confirmDelete(form.id)}>
             <IconTrash size="1rem" color="red" />
+          </ActionIcon>
+          <ActionIcon onClick={() => openFormEdit(form)}>
+            <IconEdit size="1rem" color="blue" />
           </ActionIcon>
         </div>
       </td>

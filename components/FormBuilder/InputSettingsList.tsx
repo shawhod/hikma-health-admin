@@ -124,6 +124,7 @@ export function InputSettingsList({
             />
             <TextInput
               label="Description (Optional)"
+              defaultValue={item.description}
               onChange={(e) => onFieldChange(item.id, 'description', e.currentTarget.value)}
             />
             <Text color="dimmed" size="sm">

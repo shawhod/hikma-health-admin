@@ -15,6 +15,7 @@ import {
   createStyles,
   rem,
   Avatar,
+  Loader,
 } from '@mantine/core';
 import {
   IconCalendarStats,
@@ -28,6 +29,7 @@ import {
 import { useRouter } from 'next/router';
 import { LinksGroup } from './LinksGroup';
 import { useAuthStatus } from '../hooks/useUser';
+import { tw } from 'twind';
 
 const navLinks = [
   { label: 'Dashboard', icon: IconGauge, link: '/app' },
@@ -37,6 +39,7 @@ const navLinks = [
     initiallyOpened: true,
     links: [
       { label: 'Patients List', link: '/app/patients-list' },
+      { label: 'Registration Form', link: '/app/patient-registration-form' },
       /*       { label: 'Register Patient', link: '/app/register-patient' }, */
     ],
   },
@@ -73,15 +76,15 @@ const useStyles = createStyles((theme) => ({
   footer: {
     marginLeft: `calc(${theme.spacing.md} * -1)`,
     marginRight: `calc(${theme.spacing.md} * -1)`,
-    borderTop: `${rem(1)} solid ${
-      theme.colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[3]
-    }`,
+    borderTop: `${rem(1)} solid ${theme.colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[3]
+      }`,
   },
 }));
 
 type Props = {
   children: React.ReactNode;
   title: string;
+  isLoading?: boolean
 };
 
 export default function AppLayout(props: Props) {
@@ -89,6 +92,7 @@ export default function AppLayout(props: Props) {
   const theme = useMantineTheme();
   const [opened, setOpened] = useState(false);
   const { classes } = useStyles();
+  const { children = false, title, isLoading } = props;
 
   const { loadingAuth, authenticated } = useAuthStatus();
   useEffect(() => {
@@ -136,8 +140,14 @@ export default function AppLayout(props: Props) {
       }
     >
       <div>
-        <Title order={1}>{props.title}</Title>
-        {props.children}
+        <Title order={1}>{title}</Title>
+        {
+          isLoading ? (
+            <div className={tw("flex justify-center my-6 w-full")}>
+              <Loader size="xl" />
+            </div>
+          ) : children
+        }
       </div>
     </AppShell>
   );
@@ -150,9 +160,8 @@ export function User() {
     <Box
       sx={{
         paddingTop: theme.spacing.sm,
-        borderTop: `${rem(1)} solid ${
-          theme.colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[2]
-        }`,
+        borderTop: `${rem(1)} solid ${theme.colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[2]
+          }`,
       }}
     >
       <UnstyledButton

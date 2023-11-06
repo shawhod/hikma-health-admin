@@ -15,11 +15,11 @@ export function ColorSchemeToggle() {
           color: theme.colorScheme === 'dark' ? theme.colors.yellow[4] : theme.colors.blue[6],
         })}
       >
-        {colorScheme === 'dark' ? (
+        {/*colorScheme === 'dark' ? (
           <IconSun size={20} stroke={1.5} />
         ) : (
           <IconMoonStars size={20} stroke={1.5} />
-        )}
+        )*/}
       </ActionIcon>
     </Group>
   );

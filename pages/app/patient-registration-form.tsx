@@ -596,7 +596,7 @@ export default function PatientRegistrationForm() {
                   options: translationObjectOptions(options, formLanguage),
                   name: getTranslation(label, formLanguage),
                   required
-                }} />
+                } as any} />
               }
 
               {(fieldType === 'text' || fieldType === "number") && <FreeTextInput key={field.id} field={{
@@ -604,7 +604,7 @@ export default function PatientRegistrationForm() {
                 inputType: fieldType,
                 description: "",
                 required
-              }} />
+              } as any} />
 
               } {field.fieldType === 'date' && (
                 <DatePickerInput

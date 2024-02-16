@@ -52,43 +52,48 @@ export default function FormsList() {
   const router = useRouter();
   const [forms, setForms] = useState<(HHForm & { created_at: string })[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [loadingFormTemplate, setLoadingFormTemplate] = useState<string>("")
+  const [loadingFormTemplate, setLoadingFormTemplate] = useState<string>('');
 
-
-  const fetchAllForms = (token: string) => getAllForms(token).then((fs) => {
-    setForms(fs as unknown as (HHForm & { created_at: string })[]);
-    setIsLoading(false);
-  });
+  const fetchAllForms = (token: string) =>
+    getAllForms(token).then((fs) => {
+      setForms(fs as unknown as (HHForm & { created_at: string })[]);
+      setIsLoading(false);
+    });
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) fetchAllForms(token)
+    if (token) fetchAllForms(token);
   }, []);
 
   // Filter out from the recommendations any forms that share a name with forms created by the organization
   const filteredTemplates = useMemo(() => {
     if (isLoading) {
-      return []
+      return [];
     } else {
-      const formNames = forms.map(f => f.name)
-      return hikmaFormTemplates.filter(f => !formNames.includes(f.name))
+      const formNames = forms.map((f) => f.name);
+      return hikmaFormTemplates.filter((f) => !formNames.includes(f.name));
     }
-  }, [forms.length, isLoading])
-
+  }, [forms.length, isLoading]);
 
   /**
   For the given form templates, confirm the creation of them
   */
   const confirmCreateForm = (form: HHForm) => () => {
-    if (window.confirm("Are you sure you want to create this form from this template?")) {
-      setLoadingFormTemplate(form.name)
-      const token = localStorage.getItem("token")
+    console.log(
+      pick(form, ['name', 'description', 'language', 'metadata', 'is_editable', 'is_snapshot_form'])
+    );
+    if (window.confirm('Are you sure you want to create this form from this template?')) {
+      setLoadingFormTemplate(form.name);
+      const token = localStorage.getItem('token');
       const formObj = {
-        ...pick(form, ["name", "description", "language", "metadata", "is_editable", "is_snapshot_form"]),
+        ...pick(form, ['name', 'description', 'language', 'metadata']),
+        is_editable: true,
+        is_snapshot_form: false,
+        form_fields: form.form_fields,
         createdAt: new Date(),
         updatedAt: new Date(),
         id: uuidV1(),
-      }
+      };
       axios
         .post(
           `${HIKMA_API}/admin_api/save_event_form`,
@@ -102,28 +107,27 @@ export default function FormsList() {
             },
           }
         )
-        .then(function(response) {
+        .then(function (response) {
           alert('Form created!');
-          setIsLoading(true)
-          fetchAllForms(String(token))
+          setIsLoading(true);
+          fetchAllForms(String(token));
           console.log(response);
         })
-        .catch(function(error) {
-          alert("Error creating form. Please try signing out and signing back in.")
+        .catch(function (error) {
+          alert('Error creating form. Please try signing out and signing back in.');
           console.log(error);
-        }).finally(() => {
-
-          setLoadingFormTemplate("")
         })
-
+        .finally(() => {
+          setLoadingFormTemplate('');
+        });
     }
-  }
+  };
 
   const openFormEdit = (form: HHForm) => {
     router.push('/app/new-form', {
-      query: { formId: form.id }
+      query: { formId: form.id },
     });
-  }
+  };
   const confirmDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this form?')) {
       const token = localStorage.getItem('token') || '';
@@ -139,14 +143,16 @@ export default function FormsList() {
   };
 
   const toggleFormField = (id: string, field: string) => (event: any) => {
-    console.log(id, field, event.target.checked)
+    console.log(id, field, event.target.checked);
     const token = localStorage.getItem('token') || '';
+    const endpoint = field === 'is_editable' ? 'set_event_form_editable' : 'toggle_snapshot_form';
+    const url = `${HIKMA_API}/admin_api/${endpoint}`;
     axios
       .post(
-        `${HIKMA_API}/admin_api/update_event_form`,
+        url,
         {
           id,
-          updates: { [field]: event.target.checked },
+          [field]: event.target.checked,
         },
         {
           headers: {
@@ -154,21 +160,25 @@ export default function FormsList() {
             Authorization: String(token),
           },
         }
-      ).then(res => {
-        setForms(forms => forms.map(form => {
-          if (form.id === id) {
-            return {
-              ...form,
-              [field]: event.target.checked
+      )
+      .then((res) => {
+        setForms((forms) =>
+          forms.map((form) => {
+            if (form.id === id) {
+              return {
+                ...form,
+                [field]: event.target.checked,
+              };
             }
-          }
-          return form
-        }))
-      }).catch(error => {
-        alert("Error updating form")
-        console.error(error)
+            return form;
+          })
+        );
       })
-  }
+      .catch((error) => {
+        alert('Error updating form');
+        console.error(error);
+      });
+  };
 
   const openCreateNewForm = () => {
     router.push('/app/new-form');
@@ -188,10 +198,13 @@ export default function FormsList() {
   const rows = forms.map((form) => (
     <tr key={form.id}>
       <td>
-        <Checkbox checked={form.is_editable} onChange={toggleFormField(form.id, "is_editable")} />
+        <Checkbox checked={form.is_editable} onChange={toggleFormField(form.id, 'is_editable')} />
       </td>
       <td>
-        <Checkbox checked={form.is_snapshot_form} onChange={toggleFormField(form.id, "is_snapshot_form")} />
+        <Checkbox
+          checked={form.is_snapshot_form}
+          onChange={toggleFormField(form.id, 'is_snapshot_form')}
+        />
       </td>
       <td>{form.name}</td>
       <td>{truncate(form.description, { length: 32 })}</td>
@@ -214,23 +227,27 @@ export default function FormsList() {
   return (
     <>
       <AppLayout title="Forms List">
-        {
-          filteredTemplates.length > 0 &&
+        {filteredTemplates.length > 0 && (
           <div>
-            <h3 className={tw("text-lg")}>Click to install recommended form</h3>
+            <h3 className={tw('text-lg')}>Click to install recommended form</h3>
 
-
-            <div className={tw("flex flex-wrap gap-3")}>
-              {
-                filteredTemplates.map((form) => (
-                  <div onClick={confirmCreateForm(form as any)} className={tw('shadow-sm border border-gray-200 dark:border-gray-700 rounded p-2 hover:cursor-pointer hover:shadow-xl')} key={form.id}>
-                    <h4 className={tw('text-md')}>{loadingFormTemplate === form.name ? "loading ...." : form.name}</h4>
-                  </div>
-                ))
-              }
+            <div className={tw('flex flex-wrap gap-3')}>
+              {filteredTemplates.map((form) => (
+                <div
+                  onClick={confirmCreateForm(form as any)}
+                  className={tw(
+                    'shadow-sm border border-gray-200 dark:border-gray-700 rounded p-2 hover:cursor-pointer hover:shadow-xl'
+                  )}
+                  key={form.id}
+                >
+                  <h4 className={tw('text-md')}>
+                    {loadingFormTemplate === form.name ? 'loading ....' : form.name}
+                  </h4>
+                </div>
+              ))}
             </div>
           </div>
-        }
+        )}
         <Table verticalSpacing="md" className={tw('my-6')} striped highlightOnHover withBorder>
           <thead>{ths}</thead>
           <tbody>{rows}</tbody>

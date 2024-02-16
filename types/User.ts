@@ -3,4 +3,5 @@ export type User = {
   name: any;
   role: string;
   email: string;
+  clinic_id: string;
 };

@@ -201,7 +201,7 @@ const createDiagnosisField = (
   name = 'Diagnosis',
   description = '',
   inputType: OptionsField['inputType'] = 'dropdown',
-  options: OptionsField['options'] = [],
+  options: OptionsField['options'] = []
 ): OptionsField => {
   return {
     id: String(Math.random()),
@@ -279,10 +279,10 @@ const inputAddButtons = (action: AddButtonProps) => [
     onClick: action.onClick('medicine', 'custom'),
   },
   {
-    label: "Diagnosis",
+    label: 'Diagnosis',
     icon: inputIconsMap['diagnosis'],
-    onClick: action.onClick('diagnosis', 'custom')
-  }
+    onClick: action.onClick('diagnosis', 'custom'),
+  },
 ];
 
 type State = {
@@ -291,7 +291,7 @@ type State = {
 
 type Action =
   /** Method used to override all internal fields with new fields. usefull for syncing with server/db */
-  | { type: "set-form-state", payload: { fields: HHFieldWithPosition[] } }
+  | { type: 'set-form-state'; payload: { fields: HHFieldWithPosition[] } }
   | { type: 'add-field'; payload: HHFieldWithPosition }
   | { type: 'remove-field'; payload: string }
   /** For a drop down, update its options that are rendered in a select */
@@ -300,19 +300,18 @@ type Action =
   | { type: 'add-units'; payload: { id: string; value: DoseUnit[] } }
   | { type: 'remove-units'; payload: { id: string } };
 
-
 const reducer = (state: State, action: Action) => {
   console.log('REDUCER: ', action.payload);
   switch (action.type) {
-    case "set-form-state":
+    case 'set-form-state':
       const { fields } = action.payload;
       const formState = fields.reduce((prev, curr) => {
         return {
           ...prev,
-          [curr.id]: curr
-        }
-      }, {})
-      console.log({ formState })
+          [curr.id]: curr,
+        };
+      }, {});
+      console.log({ formState });
       return formState;
     case 'add-field':
       return {
@@ -360,27 +359,25 @@ const reducer = (state: State, action: Action) => {
 };
 
 export default function NewFormBuilder() {
-  const router = useRouter()
+  const router = useRouter();
   const [fields, setFields] = useState([] as FieldType[]);
   const [state, dispatch] = useReducer(reducer, {});
   const [formName, setFormName] = useState('');
   const [language, setLanguage] = useState('en');
   const [formDescription, setFormDescription] = useState('');
-  const [formIsEditable, setFormIsEditable] = useState(true)
-  const [formIsSnapshot, setFormIsSnapshot] = useState(false)
+  const [formIsEditable, setFormIsEditable] = useState(true);
+  const [formIsSnapshot, setFormIsSnapshot] = useState(false);
   const [loadingSave, setLoadingSave] = useState(false);
 
-
-  const params = new URLSearchParams(window.location.search)
-  const formId = params.get("formId")
+  const params = new URLSearchParams(window.location.search);
+  const formId = params.get('formId');
 
   const [loadingForm, setLoadingForm] = useState(formId && formId.length > 5);
-
 
   /** If there is a formID, then we are editing a form, fetch this form */
   useEffect(() => {
     if (!formId) return;
-    const token = localStorage.getItem("token")
+    const token = localStorage.getItem('token');
     axios
       .get(
         `${HIKMA_API}/admin_api/get_event_form?id=${formId}`,
@@ -391,25 +388,37 @@ export default function NewFormBuilder() {
             Authorization: String(token),
           },
         }
-      ).then((res) => {
+      )
+      .then((res) => {
         if (!res.data?.event_form) {
-          alert("This form does not seem to exist. Contact support.");
+          alert('This form does not seem to exist. Contact support.');
           return;
         }
-        const event_form = res.data?.event_form
-        const { description, name, is_editable, is_snapshot_form, language } = event_form
-        dispatch({ type: "set-form-state", payload: { fields: event_form?.metadata || [] } })
-        console.log({ form: res.data }, name, description)
-        setFormDescription(description)
-        setFormIsEditable(is_editable);
-        setFormName(name)
-        setFormIsSnapshot(is_snapshot_form)
-      })
-      .catch(console.error).finally(() => {
-      setLoadingForm(false);
-    })
+        const event_form = res.data?.event_form;
+        const { description, name, is_editable, is_snapshot_form, language } = event_form;
 
-  }, [formId])
+        // event_form.form_fields could be either an array, or a stringified JSON or neither
+        // if it is a stringified array, try to parse it, if it fails, set it to an empty array
+        let form_fields = [];
+        try {
+          form_fields = JSON.parse(event_form?.form_fields || '[]');
+        } catch (e) {
+          console.error(e);
+          form_fields = [];
+        }
+
+        dispatch({ type: 'set-form-state', payload: { fields: form_fields } });
+        console.log({ form: res.data }, name, description);
+        setFormDescription(description);
+        setFormIsEditable(is_editable);
+        setFormName(name);
+        setFormIsSnapshot(is_snapshot_form);
+      })
+      .catch(console.error)
+      .finally(() => {
+        setLoadingForm(false);
+      });
+  }, [formId]);
 
   const addField = (fieldType: FieldType, inputType: InputType) => () => {
     console.log({ fieldType, inputType });
@@ -475,7 +484,8 @@ export default function NewFormBuilder() {
       language,
       is_editable: formIsEditable,
       is_snapshot_form: formIsSnapshot,
-      metadata: JSON.stringify(dndData),
+      form_fields: JSON.stringify(dndData),
+      metadata: {},
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -483,57 +493,53 @@ export default function NewFormBuilder() {
     setLoadingSave(true);
     const token = localStorage.getItem('token') || '';
 
-    let result: Promise<any>
-
+    let result: Promise<any>;
 
     if (formId && formId.length > 5) {
       // a form is being edited.
-      result = axios
-        .post(
-          `${HIKMA_API}/admin_api/update_event_form`,
-          {
-            id: formId,
-            updates: {
-              ...omit(form, ["createdAt", "id", "updatedAt"]),
-            },
+      result = axios.post(
+        `${HIKMA_API}/admin_api/update_event_form`,
+        {
+          id: formId,
+          updates: {
+            ...omit(form, ['createdAt', 'id', 'updatedAt']),
           },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: String(token),
-            },
-          }
-        )
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: String(token),
+          },
+        }
+      );
     } else {
-
-      result = axios
-        .post(
-          `${HIKMA_API}/admin_api/save_event_form`,
-          {
-            event_form: form,
+      result = axios.post(
+        `${HIKMA_API}/admin_api/save_event_form`,
+        {
+          event_form: form,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: String(token),
           },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: String(token),
-            },
-          }
-        )
+        }
+      );
     }
-    result.then(function(response) {
-      alert('Form saved!');
-      setLoadingSave(false);
-      console.log(response);
-    })
-      .catch(function(error) {
-        alert("Error saving form. Please try signing in first.")
+    result
+      .then(function (response) {
+        alert('Form saved!');
+        setLoadingSave(false);
+        console.log(response);
+      })
+      .catch(function (error) {
+        alert('Error saving form. Please try signing in first.');
         setLoadingSave(false);
         console.log(error);
       });
   };
 
-
-  console.log({ state })
+  console.log({ state });
 
   return (
     <AppLayout title="Form Builder" isLoading={loadingForm}>
@@ -577,7 +583,6 @@ export default function NewFormBuilder() {
             onChange={(event) => setFormIsSnapshot(event.currentTarget.checked)}
           />
 
-
           <InputSettingsList
             data={dndData}
             onRemoveField={handleFieldRemove}
@@ -592,7 +597,11 @@ export default function NewFormBuilder() {
             Save Form
           </Button>
         </Grid.Col>
-        <Grid.Col dir={isRtlLanguage(language) ? "rtl" : "ltr"} span={7} className={tw(`space-y-4 px-12 py-8`)}>
+        <Grid.Col
+          dir={isRtlLanguage(language) ? 'rtl' : 'ltr'}
+          span={7}
+          className={tw(`space-y-4 px-12 py-8`)}
+        >
           <h4 className={tw('text-2xl mb-2')}>{formName}</h4>
           {Object.values(state).map((field) => {
             if (field.fieldType === 'options') {
@@ -659,8 +668,6 @@ const WithUnits = ({
   );
 };
 
-
-
 export const FreeTextInput = React.memo(
   ({ field }: FreeTextInputProps) => {
     const inputProps = {
@@ -721,8 +728,7 @@ export const OptionsInput = React.memo(
   (pres, next) => eq(pres.field, next.field)
 );
 
-
 const isRtlLanguage = (language: string) => {
   console.log('Language: ', language === 'ar');
-  return language === 'ar'
-}
+  return language === 'ar';
+};

@@ -25,6 +25,8 @@ import {
   IconForms,
   IconGauge,
   IconAdjustments,
+  IconHaze,
+  IconDoorExit,
 } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import { LinksGroup } from './LinksGroup';
@@ -53,6 +55,8 @@ const navLinks = [
     ],
   },
   { label: 'Forms', icon: IconForms, link: '/app/forms-list' },
+  // { label: 'HERS', icon: IconHaze, link: '/app/hers' },
+  { label: 'Activate App', icon: IconHaze, link: '/app/app-register-code' },
   // { label: 'Settings', icon: IconAdjustments, link: '/app/settings' },
   { label: 'Export Data', icon: IconAdjustments, link: '/app/exports' },
 ];
@@ -76,15 +80,16 @@ const useStyles = createStyles((theme) => ({
   footer: {
     marginLeft: `calc(${theme.spacing.md} * -1)`,
     marginRight: `calc(${theme.spacing.md} * -1)`,
-    borderTop: `${rem(1)} solid ${theme.colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[3]
-      }`,
+    borderTop: `${rem(1)} solid ${
+      theme.colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[3]
+    }`,
   },
 }));
 
 type Props = {
   children: React.ReactNode;
   title: string;
-  isLoading?: boolean
+  isLoading?: boolean;
 };
 
 export default function AppLayout(props: Props) {
@@ -97,10 +102,17 @@ export default function AppLayout(props: Props) {
   const { loadingAuth, authenticated } = useAuthStatus();
   useEffect(() => {
     if (!authenticated && !loadingAuth) {
-      console.log({ authenticated, loadingAuth })
+      console.log({ authenticated, loadingAuth });
       router.replace('/');
     }
   }, [authenticated, loadingAuth]);
+
+  const confirmSignOut = () => {
+    if (window.confirm('Are you sure you want to sign out?')) {
+      localStorage.clear();
+      window.location.href = '/';
+    }
+  };
 
   const links = navLinks.map((item) => <LinksGroup {...item} key={item.label} />);
   return (
@@ -115,7 +127,12 @@ export default function AppLayout(props: Props) {
       navbar={
         <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{ sm: 200, lg: 300 }}>
           <Navbar.Section grow className={classes.links} component={ScrollArea}>
-            <div className={classes.linksInner}>{links}</div>
+            <div className={classes.linksInner}>
+              {links}
+              <div onClick={confirmSignOut}>
+                <LinksGroup icon={IconDoorExit} label="Sign Out" />
+              </div>
+            </div>
           </Navbar.Section>
 
           <Navbar.Section className={classes.footer}>{/* <User /> */}</Navbar.Section>
@@ -141,13 +158,13 @@ export default function AppLayout(props: Props) {
     >
       <div>
         <Title order={1}>{title}</Title>
-        {
-          isLoading ? (
-            <div className={tw("flex justify-center my-6 w-full")}>
-              <Loader size="xl" />
-            </div>
-          ) : children
-        }
+        {isLoading ? (
+          <div className={tw('flex justify-center my-6 w-full')}>
+            <Loader size="xl" />
+          </div>
+        ) : (
+          children
+        )}
       </div>
     </AppShell>
   );
@@ -160,8 +177,9 @@ export function User() {
     <Box
       sx={{
         paddingTop: theme.spacing.sm,
-        borderTop: `${rem(1)} solid ${theme.colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[2]
-          }`,
+        borderTop: `${rem(1)} solid ${
+          theme.colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[2]
+        }`,
       }}
     >
       <UnstyledButton

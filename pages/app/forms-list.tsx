@@ -89,6 +89,7 @@ export default function FormsList() {
         ...pick(form, ['name', 'description', 'language', 'metadata']),
         is_editable: true,
         is_snapshot_form: false,
+        // @ts-ignore
         form_fields: form.form_fields,
         createdAt: new Date(),
         updatedAt: new Date(),

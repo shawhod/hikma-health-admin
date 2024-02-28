@@ -13,7 +13,15 @@ import axios from 'axios';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
-const getAllForms = async (token: string): Promise<HHForm[]> => {
+
+/**
+Fetches all the forms froms from the database
+
+@todo Should this be a wrapped in a hook that is re-usable with loading states??
+@param {string} token to authenticate the sender
+@returns {Promise<HHForm[]>}
+*/
+export const getAllForms = async (token: string): Promise<HHForm[]> => {
   const response = await fetch(`${HIKMA_API}/admin_api/get_event_forms`, {
     method: 'GET',
     headers: {

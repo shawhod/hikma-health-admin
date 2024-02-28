@@ -58,7 +58,7 @@ const navLinks = [
   // { label: 'HERS', icon: IconHaze, link: '/app/hers' },
   { label: 'Activate App', icon: IconHaze, link: '/app/app-register-code' },
   // { label: 'Settings', icon: IconAdjustments, link: '/app/settings' },
-  { label: 'Export Data', icon: IconAdjustments, link: '/app/exports' },
+  { label: 'Raw Data / Export Events', icon: IconAdjustments, link: '/app/exports' },
 ];
 
 const useStyles = createStyles((theme) => ({

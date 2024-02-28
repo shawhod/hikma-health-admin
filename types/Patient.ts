@@ -8,6 +8,7 @@ export type Patient = {
   sex: string;
   phone: string;
   camp: string;
+  additional_data: Record<string, string>[]
   createdAt: Date;
   updatedAt: Date;
 

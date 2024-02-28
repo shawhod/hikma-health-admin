@@ -1,5 +1,5 @@
 {
-  "name": "mantine-next-template",
+  "name": "hikma-health-admin",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -33,6 +33,7 @@
     "@tabler/icons-react": "^2.39.0",
     "axios": "^1.5.1",
     "cookies-next": "^2.1.1",
+    "date-fns": "^3.3.1",
     "dayjs": "^1.11.10",
     "echarts": "^5.4.3",
     "embla-carousel-react": "^7.0.3",

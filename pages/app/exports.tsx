@@ -14,12 +14,22 @@ import If from '../../components/If';
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
 
+type ICD11Diagnosis = {
+  code: string,
+  desc: string,
+  desc_ar: string
+}
+
+type Medication = {
+  
+}
+
 type InputType = "number" | 'checkbox' | 'radio' | 'select' | "diagnosis" | "medicine"
 type EventResponse = {
   eventType: string;
   formId: string;
   patientName: string;
-  formData: { fieldId: string, fieldType: string, inputType: InputType, name: string, value: string | number }[]
+  formData: { fieldId: string, fieldType: string, inputType: InputType, name: string, value: string | number | ICD11Diagnosis[] | Medication[] }[]
 }
 
 export default function ExportsPage() {
@@ -125,6 +135,11 @@ export default function ExportsPage() {
   /** Given a list of form event entries, and an event name, return the string value or an empty string */
   const getFormDataItem = (formData: any[], name: string) => {
     const entry = formData.find(fD => fD.name === name)
+    console.log(Array.isArray(entry.value), entry?.value?.[0]?.code)
+    if (Array.isArray(entry.value) && entry?.value?.[0]?.code) {
+      // this is a diagnosis
+      return entry.value.map((en: any) => `${en.desc || ""}(${en.code || "0000"})`).join(", ")
+    }
     if (entry) {
       return entry.value || ""
     }

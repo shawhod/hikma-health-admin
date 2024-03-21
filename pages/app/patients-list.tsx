@@ -28,6 +28,25 @@ export const getAllPatients = async (token: string): Promise<Patient[]> => {
 };
 
 
+/**
+Get the colulmns of the patient records
+This is a heavy process O(n)
+
+@param {Patient[]} patientsList
+@return {string[]} columns
+*/
+export function getPatientColumns(patientsList: Patient[]): string[] {
+  const cols = new Set();
+  patientsList.slice(0, 100).forEach(pt => {
+    const allKeys = Object.keys(pt);
+    const excluded = ["additional_data"]
+    allKeys.forEach(k => !excluded.includes(k) && cols.add(k))
+    Object.keys(pt["additional_data"]).forEach(k => cols.add(k))
+  });
+  return Array.from(cols) as string[];
+}
+
+
 
 export default function PatientsList() {
   const [columns, setColumns] = useState<string[]>([])
@@ -41,15 +60,8 @@ export default function PatientsList() {
         setPatients(patientsList);
         console.log(patientsList)
 
-        // get and set the columns: This is a heavy process O(n)
-        const cols = new Set();
-        patientsList.slice(0, 100).forEach(pt => {
-          const allKeys = Object.keys(pt);
-          const excluded = ["additional_data"]
-          allKeys.forEach(k => !excluded.includes(k) && cols.add(k))
-          Object.keys(pt["additional_data"]).forEach(k => cols.add(k))
-        });
-        setColumns(Array.from(cols) as string[])
+        setColumns(getPatientColumns(patientsList))
+
         setLoading(false);
       })
       .catch((error) => {
@@ -94,7 +106,7 @@ export default function PatientsList() {
       <td>{patient.phone}</td>
       {
         additionalData.map(f => (
-        // @ts-ignore
+          // @ts-ignore
           <td key={f}>{patient.additional_data[f as any] || ""}</td>
         ))
       }

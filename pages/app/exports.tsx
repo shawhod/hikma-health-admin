@@ -4,14 +4,14 @@ import { tw } from 'twind';
 import { endOfDay, format, isValid, startOfDay, subDays } from "date-fns"
 import AppLayout from '../../components/Layout';
 import { Patient } from '../../types/Patient';
-import { getAllPatients } from './patients-list';
+import { getAllPatients, getPatientColumns } from './patients-list';
 import { Event } from '../../types/Event';
 import { getAllForms } from './forms-list';
 import { HHForm } from '../../types/Inputs';
 import { DatePickerInput } from '@mantine/dates';
 import { useImmer } from 'use-immer';
 import If from '../../components/If';
-import { upperFirst } from 'lodash';
+import { differenceBy, upperFirst } from 'lodash';
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
 
@@ -29,15 +29,14 @@ type InputType = "number" | 'checkbox' | 'radio' | 'select' | "diagnosis" | "med
 type EventResponse = {
   eventType: string;
   formId: string;
-  patientName: string;
   formData: { fieldId: string, fieldType: string, inputType: InputType, name: string, value: string | number | ICD11Diagnosis[] | Medication[] }[]
+  patient: Patient
 }
 
 export default function ExportsPage() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [forms, setForms] = useState<(HHForm & { created_at: string })[]>([]);
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
-  const [patientsList, setPatientsList] = useState<Patient[]>([]);
   const [eventResponse, setEventResponse] = useState<EventResponse[]>([])
   const [loadingEvents, setLoadingEvents] = useState<boolean>(true);
   const [filters, updateFilters] = useImmer<{ id: string, startDate: Date, endDate: Date }>({
@@ -60,25 +59,6 @@ export default function ExportsPage() {
     return forms.find(f => f.id === formId)?.name || ""
   }
 
-  const startDownload = () => {
-    if (isDownloading) return;
-    setIsDownloading(true);
-    const token = localStorage.getItem('token') || "";
-    getAllPatients(token)
-      .then((patients) => {
-        setPatientsList(patients);
-        setIsDownloading(false);
-        if (patients.length === 0) {
-          alert('No patients found');
-          return;
-        };
-        exportTableToExcel('patientsList', `patients-${new Date().toISOString()}`);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  };
-
 
   // on page load, get all the forms from the database
   useEffect(() => {
@@ -96,7 +76,7 @@ export default function ExportsPage() {
   }, []);
 
   const handleSearch = async () => {
-      const { id, startDate, endDate } = filters;
+    const { id, startDate, endDate } = filters;
     if (loadingEvents || id.length === 0) return;
     try {
       const token = localStorage.getItem('token') || "";
@@ -135,6 +115,22 @@ export default function ExportsPage() {
   }, [eventResponse])
 
 
+  /** list of all the patients returned with the events */
+  const patientsList = useMemo(() => {
+    return eventResponse.map(ev => {
+      return ev.patient;
+    });
+  }, [eventResponse])
+
+  const patientColumns = useMemo(() => {
+    /** The base fields columns */
+    const basePatientFields = ["created_at", "id", "given_name", "surname", "date_of_birth", "country", "hometown", "sex", "phone", "updated_at"]
+    const ignoreFields = ["image_timestamp", "is_deleted", "last_modified", "metadata", "deleted_at", "id", "photo_url", "	server_created_at"]
+    const cols = getPatientColumns(patientsList).filter(col => !ignoreFields.includes(col));
+    const orderedCols = Array.from(new Set(["given_name", "surname", "date_of_birth", ...cols]))
+    return orderedCols.map(decodeURIComponent);
+  }, [eventResponse])
+
   /** Given a list of form event entries, and an event name, return the string value or an empty string */
   const getFormDataItem = (formData: any[], name: string) => {
     const entry = formData.find(fD => fD.name === name)
@@ -147,7 +143,7 @@ export default function ExportsPage() {
     }
     if (Array.isArray(entry.value) && entry?.value.length > 0 && entry.value[0]?.dose !== undefined) {
       return entry.value.map((data: { name: string; dosage: number }) =>
-       `${upperFirst(data.name)}`
+        `${upperFirst(data.name)}`
       ).join(", ")
     }
     if (entry) {
@@ -155,6 +151,26 @@ export default function ExportsPage() {
     }
     return ""
   }
+
+
+  /** Given a list of patient entries in an event, and an ... */
+  // TODO
+  const patientRows = useMemo(() => {
+    /** The base fields columns */
+    const basePatientFields = ["created_at", "id", "given_name", "surname", "date_of_birth", "country", "hometown", "sex", "phone", "updated_at"]
+
+    /** The custom / dynamic fields that are in the additional_data column */
+    const additionalData = differenceBy(patientColumns, basePatientFields);
+
+    const data: Record<string, string> = {};
+
+    const columns = [...patientColumns, ...additionalData];
+    columns.forEach((col) => {
+      // if (=)
+      //   const value = 
+    })
+
+  }, [patientColumns])
 
 
   console.log(filters)
@@ -228,12 +244,6 @@ export default function ExportsPage() {
         </div>
       </SimpleGrid>
 
-
-      {/*<Button loading={isDownloading} onClick={startDownload} size="lg">
-        Export All Patient Data
-      </Button>*/}
-
-
       <If show={eventResponse.length > 0}>
 
 
@@ -242,31 +252,44 @@ export default function ExportsPage() {
         </Button>
 
 
-        <Table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Patient Name</th>
-              {
-                eventColumns.map(ev => <th key={ev}>{ev}</th>)
-              }
-            </tr>
-          </thead>
-          <tbody>{
-            eventResponse.map((ev, idx) => {
-              return (
-                <tr key={idx}>
-                  {/*@ts-ignore */}
-                  <td>{format(ev.createdAt, "yyyy/MM/dd")}</td>
-                  <td>{ev.patientName}</td>
-                  {eventColumns.map((evC, idx) => (
-                    <td key={idx}>{getFormDataItem(ev.formData, evC)}</td>
-                  ))}
-                </tr>
-              )
-            })
-          }</tbody>
-        </Table>
+        <div style={{ overflowX: "scroll" }}>
+          <Table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                {
+                  patientColumns.map(ptCol => <th style={{ minWidth: 150 }} key={ptCol}>Patient {upperFirst(ptCol.replace(new RegExp("_", "g"), " "))}</th>)
+                }
+
+                {
+                  eventColumns.map(ev => <th style={{ minWidth: 150 }} key={ev}>{ev}</th>)
+                }
+              </tr>
+            </thead>
+            <tbody>{
+              eventResponse.map((ev, idx) => {
+                return (
+                  <tr key={idx}>
+                    {/*@ts-ignore */}
+                    <td>{format(ev.createdAt, "yyyy/MM/dd")}</td>
+                    {
+                      patientColumns.map(patCol => {
+                        console.log(ev.patient.additional_data, patCol, ev.patient.additional_data[encodeURIComponent(patCol)])
+                        const value = ev?.patient?.[patCol] || ev?.patient?.additional_data?.[patCol] || ev?.patient?.additional_data?.[encodeURIComponent(patCol)] || ""
+                        return (
+                          <td key={patCol}>{value}</td>
+                        )
+                      })
+                    }
+                    {eventColumns.map((evC, idx) => (
+                      <td key={idx}>{getFormDataItem(ev.formData, evC)}</td>
+                    ))}
+                  </tr>
+                )
+              })
+            }</tbody>
+          </Table>
+        </div>
       </If>
 
       {/**
@@ -349,9 +372,10 @@ function exportTableToExcel(tableID: string, filename = '') {
 REF: https://www.geeksforgeeks.org/how-to-export-html-table-to-csv-using-javascript/ 
 
 @param {string} fileName of the file you wish to save as
+@param {string} delimiter
 */
 
-export function tableToCSV(fileName: string) {
+export function tableToCSV(fileName: string, delimiter: string = "\t") {
 
   // Variable to store the final csv data
   let csv_data = [];
@@ -369,11 +393,11 @@ export function tableToCSV(fileName: string) {
 
       // Get the text data of each cell
       // of a row and push it to csvrow
-      csvrow.push(cols[j].innerHTML);
+      csvrow.push('"' + `${cols[j].innerHTML}` + '"');
     }
 
     // Combine each column value with comma
-    csv_data.push(csvrow.join("\t"));
+    csv_data.push(csvrow.join(delimiter));
   }
 
   // Combine each row data with new line character

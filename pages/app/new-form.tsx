@@ -530,6 +530,7 @@ export default function NewFormBuilder() {
       .then(function (response) {
         alert('Form saved!');
         setLoadingSave(false);
+        router.back();
         console.log(response);
       })
       .catch(function (error) {

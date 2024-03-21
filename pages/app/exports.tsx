@@ -1,7 +1,7 @@
 import { Text, Button, Paper, SimpleGrid, Select, Table } from '@mantine/core';
 import React, { useEffect, useMemo, useState } from 'react';
 import { tw } from 'twind';
-import { format, isValid } from "date-fns"
+import { endOfDay, format, isValid, startOfDay, subDays } from "date-fns"
 import AppLayout from '../../components/Layout';
 import { Patient } from '../../types/Patient';
 import { getAllPatients } from './patients-list';
@@ -11,6 +11,7 @@ import { HHForm } from '../../types/Inputs';
 import { DatePickerInput } from '@mantine/dates';
 import { useImmer } from 'use-immer';
 import If from '../../components/If';
+import { upperFirst } from 'lodash';
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
 
@@ -21,7 +22,7 @@ type ICD11Diagnosis = {
 }
 
 type Medication = {
-  
+
 }
 
 type InputType = "number" | 'checkbox' | 'radio' | 'select' | "diagnosis" | "medicine"
@@ -39,9 +40,10 @@ export default function ExportsPage() {
   const [patientsList, setPatientsList] = useState<Patient[]>([]);
   const [eventResponse, setEventResponse] = useState<EventResponse[]>([])
   const [loadingEvents, setLoadingEvents] = useState<boolean>(true);
-  const [filters, updateFilters] = useImmer<{ id: string, dateRange: [Date | null, Date | null] }>({
+  const [filters, updateFilters] = useImmer<{ id: string, startDate: Date, endDate: Date }>({
     id: "",
-    dateRange: [null, null]
+    startDate: startOfDay(new Date()),
+    endDate: endOfDay(new Date()),
   })
 
   // Patient events are stored as JSON inside the metadata field,
@@ -94,11 +96,12 @@ export default function ExportsPage() {
   }, []);
 
   const handleSearch = async () => {
-    if (loadingEvents) return;
+      const { id, startDate, endDate } = filters;
+    if (loadingEvents || id.length === 0) return;
     try {
       const token = localStorage.getItem('token') || "";
-      const { id, dateRange } = filters;
-      let params = `id=${id}&start_date=${format(dateRange[0] || new Date(), "yyyy-MM-dd")}&end_date=${format(dateRange[1] || new Date(), "yyyy-MM-dd")}`;
+      // let params = `id=${id}&start_date=${format(startDate || new Date(), "yyyy-MM-dd")}&end_date=${format(endDate || new Date(), "yyyy-MM-dd")}`;
+      let params = `id=${id}&start_date=${(startDate || new Date()).toISOString()}&end_date=${(endDate || new Date()).toISOString()}`;
       setLoadingEvents(true);
 
       const response = await fetch(`${HIKMA_API}/admin_api/get_event_form_data?${params}`, {
@@ -135,10 +138,17 @@ export default function ExportsPage() {
   /** Given a list of form event entries, and an event name, return the string value or an empty string */
   const getFormDataItem = (formData: any[], name: string) => {
     const entry = formData.find(fD => fD.name === name)
-    console.log(Array.isArray(entry.value), entry?.value?.[0]?.code)
+    if (!entry) {
+      return ""
+    }
     if (Array.isArray(entry.value) && entry?.value?.[0]?.code) {
       // this is a diagnosis
       return entry.value.map((en: any) => `${en.desc || ""}(${en.code || "0000"})`).join(", ")
+    }
+    if (Array.isArray(entry.value) && entry?.value.length > 0 && entry.value[0]?.dose !== undefined) {
+      return entry.value.map((data: { name: string; dosage: number }) =>
+       `${upperFirst(data.name)}`
+      ).join(", ")
     }
     if (entry) {
       return entry.value || ""
@@ -147,11 +157,14 @@ export default function ExportsPage() {
   }
 
 
+  console.log(filters)
+
+
   /** Download all the events from this specific selected form and within this date range */
   const downloadEvents = () => {
-    const { dateRange, id } = filters;
-    const startDate = isValid(dateRange[0]) ? format(dateRange[0] as any, "yyyy MM dd") : "__";
-    const endDate = isValid(dateRange[1]) ? format(dateRange[1] as any, "yyyy MM dd") : "__";
+    const { startDate: startDateVal, endDate: endDateVal, id } = filters;
+    const startDate = isValid(startDateVal) ? format(startDateVal as any, "yyyy MM dd") : "__";
+    const endDate = isValid(endDateVal) ? format(endDateVal as any, "yyyy MM dd") : "__";
     const eventName = getFormName(id, forms || []);
     const fileName = `${startDate}-${endDate}-${eventName}`;
 
@@ -189,18 +202,26 @@ export default function ExportsPage() {
         />
 
         <DatePickerInput
-          type="range"
-          label="Pick dates range"
-          placeholder="Pick dates range"
-          value={filters.dateRange as [Date, Date]}
+          label="Pick a start date"
+          placeholder="Choose a date for the exports"
+          value={filters.startDate as Date}
           onChange={(range) => {
             updateFilters(draft => {
-              // @ts-ignore
-              draft.dateRange = range
+              draft.startDate = range || startOfDay(new Date())
             })
           }}
         />
 
+        <DatePickerInput
+          label="Pick an end date"
+          value={filters.endDate as Date}
+          minDate={filters.startDate || subDays(new Date(), 7)}
+          onChange={(range) => {
+            updateFilters(draft => {
+              draft.endDate = range || endOfDay(new Date())
+            })
+          }}
+        />
 
         <div style={{ display: "flex", alignContent: "flex-end", alignSelf: "flex-end" }}>
           <Button onClick={handleSearch} disabled={loadingEvents}>{loadingEvents ? "Loading ..." : "Search"}</Button>

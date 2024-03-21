@@ -13,6 +13,7 @@ import AppLayout from '../../components/Layout';
 import { FieldType, InputType } from '../../types/Inputs';
 import { FreeTextInput, OptionsInput } from './new-form';
 import axios from 'axios';
+import { useRouter } from 'next/router';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
@@ -523,6 +524,7 @@ function saveForm(form: RegistrationForm) {
 }
 
 export default function PatientRegistrationForm() {
+  const router = useRouter();
   // initial state is either loaded from the DB or on first deployment its loaded from a local state
   const initialState: RegistrationForm = {
     id: 'cc9647e0-7915-11ee-b962-0242ac120002',
@@ -614,7 +616,10 @@ export default function PatientRegistrationForm() {
         ...state,
         updatedAt: new Date(),
       })
-        .then((res) => {})
+        .then((res) => {
+        alert("Form Saved.");
+        router.back()
+      })
         .catch((error) => {
           console.error({ error });
         })
@@ -663,7 +668,7 @@ export default function PatientRegistrationForm() {
                       fieldType: 'options',
                       description: '',
                       options: translationObjectOptions(options, formLanguage),
-                      name: getTranslation(label, formLanguage),
+                      name: getTranslation(label, formLanguage) + `${!field.visible ? "(hidden)" : ""}`,
                       required,
                     } as any
                   }
@@ -674,7 +679,7 @@ export default function PatientRegistrationForm() {
                   key={field.id}
                   field={
                     {
-                      name: getTranslation(label, formLanguage),
+                      name: getTranslation(label, formLanguage) + `${!field.visible ? "(hidden)" : ""}`,
                       inputType: fieldType,
                       description: '',
                       required,
@@ -686,7 +691,7 @@ export default function PatientRegistrationForm() {
                 <DatePickerInput
                   valueFormat="YYYY MMM DD"
                   description={''}
-                  label={getTranslation(label, formLanguage)}
+                  label={getTranslation(label, formLanguage)+ `${!field.visible ? "(hidden)" : ""}`}
                   required={field.required}
                   placeholder="Pick date"
                   mx="auto"

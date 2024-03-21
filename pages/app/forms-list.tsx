@@ -176,7 +176,7 @@ export default function FormsList() {
             if (form.id === id) {
               return {
                 ...form,
-                [field]: event.target.checked,
+                [field]: !event.target.checked,
               };
             }
             return form;

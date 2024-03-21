@@ -350,8 +350,8 @@ function reducer(state: State, action: Action) {
       if (field) {
         field.label[translation] = label;
 
-        // edit the column name to be the english translation of a field
-        if (translation === 'en') {
+        // edit the column name to be the english translation of a field && is not a base field
+        if (translation === 'en' && field.baseField === false) {
           if (field.label['en'].length > 0) {
             field.column = encodeURI(field.label['en']);
           }

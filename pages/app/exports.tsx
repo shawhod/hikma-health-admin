@@ -207,7 +207,7 @@ export default function ExportsPage() {
           value={filters.startDate as Date}
           onChange={(range) => {
             updateFilters(draft => {
-              draft.startDate = range || startOfDay(new Date())
+              draft.startDate = startOfDay(range || new Date())
             })
           }}
         />
@@ -218,7 +218,7 @@ export default function ExportsPage() {
           minDate={filters.startDate || subDays(new Date(), 7)}
           onChange={(range) => {
             updateFilters(draft => {
-              draft.endDate = range || endOfDay(new Date())
+              draft.endDate = endOfDay(range || new Date())
             })
           }}
         />

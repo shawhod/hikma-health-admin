@@ -274,8 +274,9 @@ export default function ExportsPage() {
                     <td>{format(ev.createdAt, "yyyy/MM/dd")}</td>
                     {
                       patientColumns.map(patCol => {
-                        console.log(ev.patient.additional_data, patCol, ev.patient.additional_data[encodeURIComponent(patCol)])
-                        const value = ev?.patient?.[patCol] || ev?.patient?.additional_data?.[patCol] || ev?.patient?.additional_data?.[encodeURIComponent(patCol)] || ""
+                        console.log(ev.patient.additional_data, patCol, ev.patient.additional_data[encodeURIComponent(patCol) as any])
+                      // @ts-ignore
+                        const value: any = ev?.patient?.[patCol as any] || ev?.patient?.additional_data?.[patCol as any] || ev?.patient?.additional_data?.[encodeURIComponent(patCol) as any] || ""
                         return (
                           <td key={patCol}>{value}</td>
                         )

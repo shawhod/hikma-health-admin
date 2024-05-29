@@ -56,12 +56,13 @@ import AppLayout from '../../components/Layout';
 import { DiagnosisSelect } from '../../components/FormBuilder/DiagnosisPicker';
 import { languageOptions } from '../../data/languages';
 import { useRouter } from 'next/router';
+import { nanoid } from 'nanoid';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
 function createTextField(name = '', description = '', inputType: InputType = 'text'): TextField {
   const baseInput: HHFieldBase = {
-    id: String(Math.random()),
+    id: nanoid(),
     name,
     description,
     inputType,
@@ -86,7 +87,7 @@ function createBinaryField(
   options: BinaryField['options'] = []
 ): BinaryField {
   return {
-    id: String(Math.random()),
+    id: nanoid(),
     name,
     description,
     inputType,
@@ -106,7 +107,7 @@ function createMedicineField(
   options: MedicineField['options'] = []
 ): MedicineField {
   return {
-    id: String(Math.random()),
+    id: nanoid(),
     name,
     description,
     inputType,
@@ -187,7 +188,7 @@ const createOptionsField = (
   options: OptionsField['options'] = []
 ): OptionsField => {
   return {
-    id: String(Math.random()),
+    id: nanoid(),
     name,
     description,
     inputType,
@@ -204,7 +205,7 @@ const createDiagnosisField = (
   options: OptionsField['options'] = []
 ): OptionsField => {
   return {
-    id: String(Math.random()),
+    id: nanoid(),
     name,
     description,
     inputType,
@@ -216,7 +217,7 @@ const createDiagnosisField = (
 
 const createDateField = (name = '', description = '', inputType = 'date'): DateField => {
   return {
-    id: String(Math.random()),
+    id: nanoid(),
     name,
     description,
     inputType,

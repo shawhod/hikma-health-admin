@@ -23,6 +23,7 @@ import { FieldType, InputType } from '../../types/Inputs';
 import { FreeTextInput, OptionsInput } from './new-form';
 import axios from 'axios';
 import { useRouter } from 'next/router';
+import { mapObjectValues } from '../../utils/misc';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
@@ -40,7 +41,7 @@ type TranslationObject = DefaultLanguages & {
 
 type LanguageKey = 'en' | 'ar' | 'es' | string;
 
-type RegistrationFormField = {
+export type RegistrationFormField = {
   id: string;
   position: number;
   // column name in the database
@@ -55,7 +56,7 @@ type RegistrationFormField = {
   isSearchField: boolean; // Whether or not this field can be sea
 };
 
-type RegistrationForm = {
+export type RegistrationForm = {
   id: string;
   name: string;
   fields: RegistrationFormField[];
@@ -91,7 +92,7 @@ Given a translation object, create options for a dropdown
 @param {LanguageKey} language
 @returns {Array<{label: string, value: string}>}
 */
-function translationObjectOptions(
+export function translationObjectOptions(
   translations: TranslationObject[],
   language: LanguageKey
 ): Array<{ label: string; value: string }> {
@@ -121,7 +122,7 @@ First Name, Last Name, date of birth, sex, registration date
     { name: "camp", type: "string", isOptional: true },
   ],
 */
-const baseFields: RegistrationForm['fields'] = [
+export const baseFields: RegistrationForm['fields'] = [
   {
     baseField: true,
     id: 'e3d7615c-6ee6-11ee-b962-0242ac120002',
@@ -415,6 +416,7 @@ function reducer(state: State, action: Action) {
         field.label[translation] = label;
 
         // edit the column name to be the english translation of a field && is not a base field
+        // IMPORTANT: never edit a base field. these fields map to the column names in the mobile application
         if (translation === 'en' && field.baseField === false) {
           if (field.label['en'].length > 0) {
             field.column = encodeURI(field.label['en']);
@@ -1116,17 +1118,6 @@ export default function PatientRegistrationForm() {
 }
 
 /**
-Utility function that processes the values of an object
-
-@param {Object} obj
-@oaram {(v: any) => any} func
-@returns {Object}
-*/
-function mapObjectValues<T>(obj: T, func: (v: any) => any): T {
-  return Object.fromEntries(Object.entries(obj as any).map(([k, v]) => [k, func(v)])) as T;
-}
-
-/**
 Given a language key, return the expanded version of the key
 
 @param {LanguageKey} language
@@ -1157,7 +1148,7 @@ If the english version does not exist, return any.
 @param {string} language
 @return {string} translation
 */
-function getTranslation(translations: TranslationObject, language: string): string {
+export function getTranslation(translations: TranslationObject, language: string): string {
   const translationKeys = Object.keys(translations);
 
   // in the case of no translations, return an empty string

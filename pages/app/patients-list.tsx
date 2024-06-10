@@ -203,10 +203,10 @@ export default function PatientsList() {
   const rows = patients.map((patient: Patient) => (
     <tr key={patient.id}>
       {basePatientFields.map((field) => (
-        <td key={patient.id + field}>{String(patient[field] || '')}</td>
+        <td key={patient.id + field}>{String(patient[field as keyof Patient] || '')}</td>
       ))}
       {additionalData.map((col) => (
-        <td key={col}>{String(patient.additional_data[col] || '')}</td>
+        <td key={col}>{String(patient.additional_data[col as any] || '')}</td>
       ))}{' '}
       {/*
       <td>{format(patient.created_at, 'dd MMM yyyy')}</td>

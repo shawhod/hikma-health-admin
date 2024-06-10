@@ -392,6 +392,7 @@ function reducer(state: State, action: Action) {
         id: uuidv1(),
         baseField: false,
         fieldType: 'text',
+        isSearchField: false,
         column: '',
         label: {
           en: 'New Field ' + position,

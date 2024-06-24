@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useReducer, useEffect } from 'react';
+import React, { useState, useReducer, useEffect, useMemo } from 'react';
 import {
   Menu,
   Button,
@@ -15,6 +15,7 @@ import {
   Textarea,
   Select,
   Radio,
+  MultiSelect,
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { v1 as uuidV1 } from 'uuid';
@@ -37,7 +38,7 @@ import {
   IconReportMedical,
 } from '@tabler/icons-react';
 import { tw } from 'twind';
-import { omit, eq } from 'lodash';
+import { omit, eq, sortBy } from 'lodash';
 import { Welcome } from '../../components/Welcome/Welcome';
 import { ColorSchemeToggle } from '../../components/ColorSchemeToggle/ColorSchemeToggle';
 import { InputSettingsList } from '../../components/FormBuilder/InputSettingsList';
@@ -194,6 +195,7 @@ const createOptionsField = (
     inputType,
     required: true,
     fieldType: 'options',
+    multi: false,
     options,
   };
 };
@@ -265,8 +267,8 @@ const inputAddButtons = (action: AddButtonProps) => [
     onClick: action.onClick('date', 'date'),
   },
   {
-    label: 'Checkbox / Radio',
-    icon: inputIconsMap['checkbox'],
+    label: 'Radio',
+    icon: inputIconsMap['options'],
     onClick: action.onClick('options', 'radio'),
   },
   {
@@ -299,7 +301,8 @@ type Action =
   | { type: 'set-dropdown-options'; payload: { id: string; value: FieldOption[] } }
   | { type: 'set-field-key-value'; payload: { id: string; key: string; value: any } }
   | { type: 'add-units'; payload: { id: string; value: DoseUnit[] } }
-  | { type: 'remove-units'; payload: { id: string } };
+  | { type: 'remove-units'; payload: { id: string } }
+  | { type: 'reorder-fields'; payload: { ids: string[] } };
 
 const reducer = (state: State, action: Action) => {
   console.log('REDUCER: ', action.payload);
@@ -354,6 +357,16 @@ const reducer = (state: State, action: Action) => {
           ...omit(state[action.payload.id], 'units'),
         },
       };
+    case 'reorder-fields':
+      const { ids } = action.payload;
+      const newOrder = ids.reduce((prev, curr, idx) => {
+        prev[curr] = {
+          ...prev[curr],
+          position: idx,
+        };
+        return prev;
+      }, state);
+      return { ...newOrder };
     default:
       return state;
   }
@@ -409,7 +422,6 @@ export default function NewFormBuilder() {
         }
 
         dispatch({ type: 'set-form-state', payload: { fields: form_fields } });
-        console.log({ form: res.data }, name, description);
         setFormDescription(description);
         setFormIsEditable(is_editable);
         setFormName(name);
@@ -470,10 +482,13 @@ export default function NewFormBuilder() {
     dispatch({ type: 'add-units', payload: { id, value: units } });
   };
 
-  // console.log({state})
-  const dndData = Object.values(state).map((field) => ({
+  const handleFieldsReorder = (ids: string[]) => {
+    dispatch({ type: 'reorder-fields', payload: { ids } });
+  };
+  const dndData = sortBy(Object.values(state), ['position']).map((field) => ({
     ...field,
   }));
+  // const dndData = useMemo(() => sortBy(Object.values(state), ['position']), [Object.values(state)]);
 
   const handleSaveForm = () => {
     if (loadingSave) return;
@@ -487,8 +502,8 @@ export default function NewFormBuilder() {
       is_snapshot_form: formIsSnapshot,
       form_fields: JSON.stringify(dndData),
       metadata: {},
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     setLoadingSave(true);
@@ -541,8 +556,6 @@ export default function NewFormBuilder() {
       });
   };
 
-  console.log({ state });
-
   return (
     <AppLayout title="Form Builder" isLoading={loadingForm}>
       <Grid className={tw('m-0 ')} gap="4">
@@ -591,6 +604,7 @@ export default function NewFormBuilder() {
             onFieldChange={handleFieldChange}
             onFieldOptionChange={handleFieldOptionChange}
             onFieldUnitChange={handleFieldUnitChange}
+            onReorder={handleFieldsReorder}
           />
           <br />
           <Divider my="sm" label="Add Input To Form" labelPosition="center" />
@@ -602,14 +616,14 @@ export default function NewFormBuilder() {
         <Grid.Col
           dir={isRtlLanguage(language) ? 'rtl' : 'ltr'}
           span={7}
-          className={tw(`space-y-4 px-12 py-8`)}
+          className={tw(`space-y-4 px-12 py-8 overflow-y-scroll h-screen`)}
         >
           <h4 className={tw('text-2xl mb-2')}>{formName}</h4>
-          {Object.values(state).map((field) => {
+          {sortBy(Object.values(state), ['position']).map((field, idx) => {
             if (field.fieldType === 'options') {
-              return <OptionsInput key={field.id} field={field} />;
+              return <OptionsInput key={field.id + '_' + (field.position || idx)} field={field} />;
             } else if (field.fieldType === 'free-text') {
-              return <FreeTextInput key={field.id} field={field} />;
+              return <FreeTextInput key={field.id + '_' + (field.position || idx)} field={field} />;
             } else if (field.fieldType === 'date') {
               return (
                 <DatePickerInput
@@ -622,9 +636,11 @@ export default function NewFormBuilder() {
                 />
               );
             } else if (field.fieldType === 'medicine') {
-              return <MedicineInput key={field.id} field={field} />;
+              return <MedicineInput key={field.id + '_' + (field.position || idx)} field={field} />;
             } else if (field.fieldType === 'diagnosis') {
-              return <DiagnosisSelect key={field.id} field={field} />;
+              return (
+                <DiagnosisSelect key={field.id + '_' + (field.position || idx)} field={field} />
+              );
             } else {
               return null;
             }
@@ -708,6 +724,7 @@ export const OptionsInput = React.memo(
       label: field.name,
       description: field.description,
       required: field.required,
+      multi: field.multi,
       // value: field.value,
     };
 
@@ -724,13 +741,25 @@ export const OptionsInput = React.memo(
         );
       case 'select':
       default:
-        return <Select data={field.options} {...inputProps} field={field} />;
+        if (field.multi) {
+          return (
+            <MultiSelect
+              data={field.options}
+              multiple={field.multi}
+              {...inputProps}
+              field={field}
+            />
+          );
+        } else {
+          return (
+            <Select data={field.options} multiple={field.multi} {...inputProps} field={field} />
+          );
+        }
     }
   },
   (pres, next) => eq(pres.field, next.field)
 );
 
 const isRtlLanguage = (language: string) => {
-  console.log('Language: ', language === 'ar');
   return language === 'ar';
 };

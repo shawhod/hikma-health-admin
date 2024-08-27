@@ -1,6 +1,17 @@
 // @ts-nocheck
 import { useEffect } from 'react';
-import { createStyles, rem, Text, TextInput, Button, Checkbox, MultiSelect } from '@mantine/core';
+import {
+  rem,
+  Text,
+  TextInput,
+  Button,
+  Checkbox,
+  MultiSelect,
+  useMantineColorScheme,
+  Box,
+} from '@mantine/core';
+import CreatableSelect from 'react-select/creatable';
+import { createStyles } from '@mantine/emotion';
 import { tw } from 'twind';
 import { upperFirst, lowerCase } from 'lodash';
 import { useListState } from '@mantine/hooks';
@@ -44,17 +55,26 @@ const measurementOptions: MeasurementUnit[] = [
   'units',
 ];
 
-const useStyles = createStyles((theme) => ({
+const useStyles = createStyles((theme, _, u) => ({
   item: {
     display: 'flex',
     alignItems: 'center',
     borderRadius: theme.radius.md,
-    border: `${rem(1)} solid ${
-      theme.colorScheme === 'dark' ? theme.colors.dark[5] : theme.colors.gray[2]
-    }`,
+
+    [u.dark]: {
+      border: `${rem(1)} solid ${theme.colors.dark[5]}`,
+      backgroundColor: theme.colors.dark[5],
+    },
+    [u.light]: {
+      border: `${rem(1)} solid ${theme.colors.gray[2]}`,
+      backgroundColor: theme.white,
+    },
+    // border: `${rem(1)} solid ${
+    // theme.colorScheme === 'dark' ? theme.colors.dark[5] : theme.colors.gray[2]
+    // }`,
     padding: `${theme.spacing.sm} ${theme.spacing.xl}`,
     paddingLeft: `calc(${theme.spacing.xl} - ${theme.spacing.md})`, // to offset drag handle
-    backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[5] : theme.white,
+    // backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[5] : theme.white,
     marginBottom: theme.spacing.sm,
   },
 
@@ -69,12 +89,17 @@ const useStyles = createStyles((theme) => ({
   },
 
   dragHandle: {
-    ...theme.fn.focusStyles(),
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
-    color: theme.colorScheme === 'dark' ? theme.colors.dark[1] : theme.colors.gray[6],
+    [u.dark]: {
+      color: theme.colors.dark[1],
+    },
+    [u.light]: {
+      color: theme.colors.gray[6],
+    },
+    // color: theme.colorScheme === 'dark' ? theme.colors.dark[1] : theme.colors.gray[6],
     paddingLeft: theme.spacing.md,
     paddingRight: theme.spacing.md,
   },
@@ -99,6 +124,7 @@ export function InputSettingsList({
 }: DndListHandleProps) {
   const { classes, cx } = useStyles();
   const [state, handlers] = useListState(data);
+  const { colorScheme } = useMantineColorScheme();
 
   // On change of incoming data props, update the listState
   useEffect(() => {
@@ -135,8 +161,8 @@ export function InputSettingsList({
 
             {['select', 'dropdown', 'checkbox', 'radio'].includes(item.inputType) &&
               item.fieldType !== 'diagnosis' && (
-                <>
-                  <MultiSelect
+                <Box py={4}>
+                  {/*<MultiSelect
                     label="Add options"
                     data={fieldOptionsUnion(YesNoOptions, item.options || [])}
                     placeholder="Select items"
@@ -157,7 +183,26 @@ export function InputSettingsList({
                       onFieldOptionChange(item.id, [...item.options, newOption]);
                     }}
                   />
-                </>
+                  */}
+                  <Text size="sm">Add Options</Text>
+                  <CreatableSelect
+                    value={item.options}
+                    isMulti
+                    isSearchable
+                    onChange={(newValue, _) => onFieldOptionChange(item.id, newValue)}
+                    name="colors"
+                    options={fieldOptionsUnion(YesNoOptions, item.options || [])}
+                    className={
+                      colorScheme === 'light' ? 'light-select-container' : 'dark-select-container'
+                    }
+                    // styles={{
+                    // input: {
+                    // background: "red"
+                    // }
+                    // }}
+                    classNamePrefix={colorScheme === 'light' ? 'light-select' : 'dark-select'}
+                  />
+                </Box>
               )}
 
             {item.inputType === 'number' && (

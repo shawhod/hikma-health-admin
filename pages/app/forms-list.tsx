@@ -13,7 +13,6 @@ import axios from 'axios';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
-
 /**
 Fetches all the forms froms from the database
 
@@ -194,41 +193,41 @@ export default function FormsList() {
   };
 
   const ths = (
-    <tr>
-      <th>Editable ?</th>
-      <th>Show Snapshot ?</th>
-      <th>Form Name</th>
-      <th>Description</th>
-      <th>Created At</th>
-      <th>Actions</th>
-    </tr>
+    <Table.Tr>
+      <Table.Th>Editable ?</Table.Th>
+      <Table.Th>Show Snapshot ?</Table.Th>
+      <Table.Th>Form Name</Table.Th>
+      <Table.Th>Description</Table.Th>
+      <Table.Th>Created At</Table.Th>
+      <Table.Th>Actions</Table.Th>
+    </Table.Tr>
   );
 
   const rows = forms.map((form) => (
-    <tr key={form.id}>
-      <td>
+    <Table.Tr key={form.id}>
+      <Table.Td>
         <Checkbox checked={form.is_editable} onChange={toggleFormField(form.id, 'is_editable')} />
-      </td>
-      <td>
+      </Table.Td>
+      <Table.Td>
         <Checkbox
           checked={form.is_snapshot_form}
           onChange={toggleFormField(form.id, 'is_snapshot_form')}
         />
-      </td>
-      <td>{form.name}</td>
-      <td>{truncate(form.description, { length: 32 })}</td>
-      <td>{form.created_at}</td>
-      <td>
+      </Table.Td>
+      <Table.Td>{form.name}</Table.Td>
+      <Table.Td>{truncate(form.description, { length: 32 })}</Table.Td>
+      <Table.Td>{form.created_at}</Table.Td>
+      <Table.Td>
         <div className={tw('flex space-x-4')}>
-          <ActionIcon onClick={() => confirmDelete(form.id)}>
+          <ActionIcon variant="transparent" onClick={() => confirmDelete(form.id)}>
             <IconTrash size="1rem" color="red" />
           </ActionIcon>
-          <ActionIcon onClick={() => openFormEdit(form)}>
+          <ActionIcon variant="transparent" onClick={() => openFormEdit(form)}>
             <IconEdit size="1rem" color="blue" />
           </ActionIcon>
         </div>
-      </td>
-    </tr>
+      </Table.Td>
+    </Table.Tr>
   ));
 
   console.log({ forms });
@@ -257,9 +256,9 @@ export default function FormsList() {
             </div>
           </div>
         )}
-        <Table verticalSpacing="md" className={tw('my-6')} striped highlightOnHover withBorder>
-          <thead>{ths}</thead>
-          <tbody>{rows}</tbody>
+        <Table verticalSpacing="md" className={tw('my-6')} striped highlightOnHover withRowBorders>
+          <Table.Thead>{ths}</Table.Thead>
+          <Table.Tbody>{rows}</Table.Tbody>
         </Table>
 
         <div className={tw('flex justify-center my-6 w-full')}>

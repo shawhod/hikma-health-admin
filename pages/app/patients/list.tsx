@@ -1,19 +1,22 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ActionIcon, Button, Loader, Table } from '@mantine/core';
 import { tw } from 'twind';
-import AppLayout from '../../components/Layout';
-import { Patient } from '../../types/Patient';
+import AppLayout from '../../../components/Layout';
+import { Patient } from '../../../types/Patient';
 import { differenceBy, isEqual, isEqualWith, replace } from 'lodash';
 import { format } from 'date-fns';
-import { tableToCSV } from './exports';
+import { tableToCSV } from '../exports';
 import {
   baseFields,
   getTranslation,
   RegistrationForm,
   translationObjectOptions,
-} from './patient-registration-form';
+} from './registration-form';
 import axios from 'axios';
-import { mapObjectValues } from '../../utils/misc';
+import { mapObjectValues } from '../../../utils/misc';
+import { IconPlus } from '@tabler/icons-react';
+import { useRouter } from 'next/router';
+import { usePatientRegistrationForm } from '../../../hooks/usePatientRegistrationForm';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
@@ -34,64 +37,6 @@ export const getAllPatients = async (token: string): Promise<Patient[]> => {
   const result = await response.json();
   return result.patients;
 };
-
-/**
-Data hook for easily loading the patient registration form
-*/
-function usePatientRegistrationForm(): { form: RegistrationForm | null; refresh: () => void } {
-  const [form, setForm] = useState<RegistrationForm | null>(null);
-  const [loadingForm, setLoadingForm] = useState(true);
-
-  function fetchData() {
-    return axios.get(`${HIKMA_API}/admin_api/get_patient_registration_forms`, {
-      headers: {
-        Authorization: String(localStorage.getItem('token')),
-      },
-    });
-  }
-
-  useEffect(() => {
-    fetchData()
-      .then((res) => {
-        console.log({ forms: res.data });
-        const { forms } = res.data;
-        if (forms.length < 1) {
-          return console.warn('There are no forms in the database');
-        } else if (forms.length > 1) {
-          console.warn('There are more than one forms in the database');
-        }
-        const form = forms[0] as unknown as RegistrationForm;
-        // TODO: Extract out code for converting db object into usable object for re-use in the mobile client
-        const savedForm: RegistrationForm = {
-          id: form.id,
-          name: decodeURI(form.name),
-          fields: form.fields.map((field) => ({
-            ...field,
-            label: mapObjectValues(field.label, decodeURI),
-            options: field.options.map((opt) => mapObjectValues(opt, decodeURI)),
-            column: decodeURI(field.column),
-          })),
-          createdAt: form.createdAt,
-          updatedAt: form.updatedAt,
-          metadata: form.metadata,
-        };
-
-        setForm(savedForm);
-      })
-      .catch((error) => {
-        console.error(error);
-        setForm(null);
-      })
-      .finally(() => {
-        setLoadingForm(false);
-      });
-  }, []);
-
-  return {
-    form,
-    refresh: fetchData,
-  };
-}
 
 /**
 Get the colulmns of the patient records
@@ -115,6 +60,7 @@ export default function PatientsList() {
   const [columns, setColumns] = useState<string[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const router = useRouter();
 
   const { form: patientRegistrationForm } = usePatientRegistrationForm();
 
@@ -141,22 +87,28 @@ export default function PatientsList() {
   const registrationIdToField: Record<string, any> = useMemo(() => {
     if (patientRegistrationForm === null) return {};
     const { fields } = patientRegistrationForm;
-    return fields.reduce((prev, curr) => {
-      const key = curr.id;
-      prev[key] = getTranslation(curr.label, 'en') || '';
-      return prev;
-    }, {} as Record<string, any>);
+    return fields.reduce(
+      (prev, curr) => {
+        const key = curr.id;
+        prev[key] = getTranslation(curr.label, 'en') || '';
+        return prev;
+      },
+      {} as Record<string, any>
+    );
   }, [patientRegistrationForm]);
 
   /* mapping of columns to their current label */
   const registrationColToField: Record<string, any> = useMemo(() => {
     if (patientRegistrationForm === null) return {};
     const { fields } = patientRegistrationForm;
-    return fields.reduce((prev, curr) => {
-      const key = curr.column;
-      prev[key] = getTranslation(curr.label, 'en') || curr.column || '';
-      return prev;
-    }, {} as Record<string, any>);
+    return fields.reduce(
+      (prev, curr) => {
+        const key = curr.column;
+        prev[key] = getTranslation(curr.label, 'en') || curr.column || '';
+        return prev;
+      },
+      {} as Record<string, any>
+    );
   }, [patientRegistrationForm]);
 
   /** Download all the loaded patients */
@@ -189,25 +141,35 @@ export default function PatientsList() {
   /** The custom / dynamic fields that are in the additional_data column */
   const additionalData = differenceBy(columns, basePatientFields);
 
+  const goToRegisterPatient = () => {
+    router.push('/app/patients/register');
+  };
+
   const ths = (
-    <tr>
+    <Table.Tr>
       {basePatientFields.map((col) => (
-        <th key={col}>{registrationColToField[col] || replace(col || '', '_', ' ')}</th>
+        <Table.Th style={{ minWidth: 250 }} key={col}>
+          {registrationColToField[col] || replace(col || '', '_', ' ')}
+        </Table.Th>
       ))}
       {additionalData.map((col) => (
-        <th key={col}>{registrationIdToField[col] || col}</th>
+        <Table.Th style={{ minWidth: 250 }} key={col}>
+          {registrationIdToField[col] || col}
+        </Table.Th>
       ))}
-    </tr>
+    </Table.Tr>
   );
 
   const rows = patients.map((patient: Patient) => (
-    <tr key={patient.id}>
+    <Table.Tr key={patient.id}>
       {basePatientFields.map((field) => (
-        <td key={patient.id + field}>{String(patient[field as keyof Patient] || '')}</td>
+        <Table.Td key={patient.id + field}>
+          {String(patient[field as keyof Patient] || '')}
+        </Table.Td>
       ))}
       {additionalData.map((col) => (
-        <td key={col}>{String(patient.additional_data[col as any] || '')}</td>
-      ))}{' '}
+        <Table.Td key={col}>{String(patient.additional_data[col as any] || '')}</Table.Td>
+      ))}
       {/*
       <td>{format(patient.created_at, 'dd MMM yyyy')}</td>
       <td>{patient.id}</td>
@@ -223,22 +185,46 @@ export default function PatientsList() {
         // @ts-ignore
         <td key={f}>{patient.additional_data[f as any] || ''}</td>
       )) */}
-    </tr>
+    </Table.Tr>
   ));
 
   return (
-    <AppLayout title="Patients List">
-      <Button onClick={downloadPatients} variant={'light'}>
-        Download data
-      </Button>
-      <div style={{ overflowX: 'scroll' }}>
-        <Table striped highlightOnHover>
-          <thead>{ths}</thead>
-          <tbody>{rows}</tbody>
-        </Table>
-      </div>
+    <>
+      <AppLayout title="Patients List">
+        <Button onClick={downloadPatients} variant={'light'}>
+          Download data
+        </Button>
+        <Table.ScrollContainer minWidth={500}>
+          <Table
+            horizontalSpacing={'md'}
+            striped
+            stickyHeader
+            stickyHeaderOffset={60}
+            highlightOnHover
+          >
+            <thead>{ths}</thead>
+            <tbody>{rows}</tbody>
+          </Table>
+        </Table.ScrollContainer>
 
-      <div className={tw('flex justify-center my-6 w-full')}>{loading && <Loader size="xl" />}</div>
-    </AppLayout>
+        <div className={tw('flex justify-center my-6 w-full')}>
+          {loading && <Loader size="xl" />}
+        </div>
+      </AppLayout>
+      <ActionIcon
+        style={{
+          position: 'fixed',
+          bottom: 20,
+          right: 20,
+        }}
+        onClick={goToRegisterPatient}
+        variant="filled"
+        size="xl"
+        radius="xl"
+        aria-label="Settings"
+      >
+        <IconPlus style={{ width: '60%', height: '60%' }} stroke={1.5} />
+      </ActionIcon>
+    </>
   );
 }

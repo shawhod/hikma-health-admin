@@ -1,36 +1,59 @@
+import '@mantine/core/styles.css';
+import '@mantine/dates/styles.css';
+
 import { useState } from 'react';
 import NextApp, { AppProps, AppContext } from 'next/app';
 import { getCookie, setCookie } from 'cookies-next';
 import Head from 'next/head';
-import { MantineProvider, ColorScheme, ColorSchemeProvider } from '@mantine/core';
+import {
+  MantineProvider,
+  ColorSchemeScript,
+  createTheme,
+  useMantineColorScheme,
+  MantineColorScheme,
+} from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import './index.css';
+import { emotionTransform, MantineEmotionProvider } from '@mantine/emotion';
+import { emotionCache } from '../emotion/cache';
 
-export default function App(props: AppProps & { colorScheme: ColorScheme }) {
+const theme = createTheme({});
+
+export default function App(props: AppProps & { colorScheme: MantineColorScheme }) {
   const { Component, pageProps } = props;
-  const [colorScheme, setColorScheme] = useState<ColorScheme>(props.colorScheme);
+  // const { setColorScheme, clearColorScheme, colorScheme } = useMantineColorScheme();
 
-  const toggleColorScheme = (value?: ColorScheme) => {
-    const nextColorScheme = value || (colorScheme === 'dark' ? 'light' : 'dark');
-    setColorScheme(nextColorScheme);
-    setCookie('mantine-color-scheme', nextColorScheme, { maxAge: 60 * 60 * 24 * 30 });
-  };
+  // const toggleColorScheme = (value?: ColorScheme) => {
+  //   const nextColorScheme = value || (colorScheme === 'dark' ? 'light' : 'dark');
+  //   setColorScheme(nextColorScheme);
+  //   setCookie('mantine-color-scheme', nextColorScheme, { maxAge: 60 * 60 * 24 * 30 });
+  // };
 
   return (
-    <>
-      <Head>
-        <title>Hikma Health Admin Dashboard</title>
-        <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width" />
-        <link rel="shortcut icon" href="/favicon.svg" />
-      </Head>
+    <MantineEmotionProvider cache={emotionCache}>
+      <MantineProvider
+        theme={theme}
+        // forceColorScheme={colorScheme as any}
+        stylesTransform={emotionTransform}
+        defaultColorScheme="dark"
+        // withGlobalStyles
+        // withNormalizeCSS
+      >
+        <Head>
+          <title>Hikma Health Admin Dashboard</title>
+          <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width" />
+          <link rel="shortcut icon" href="/favicon.svg" />
+          <ColorSchemeScript />
+        </Head>
 
-      <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
-        <MantineProvider theme={{ colorScheme }} withGlobalStyles withNormalizeCSS>
-          <Component {...pageProps} />
-          <Notifications />
-        </MantineProvider>
-      </ColorSchemeProvider>
-    </>
+        <ColorSchemeScript
+          defaultColorScheme="dark"
+          // onToggle={() => setColorScheme(colorScheme === 'light' ? 'dark' : 'light')}
+        />
+        <Component {...pageProps} />
+        <Notifications />
+      </MantineProvider>
+    </MantineEmotionProvider>
   );
 }
 

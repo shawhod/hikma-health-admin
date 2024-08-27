@@ -109,7 +109,7 @@ export const MedicineInput = React.memo(
           </div>
 
           <div className={tw(`flex space-between space-x-4`)}>
-            <NumberInput className={tw(`flex-1`)} type="number" label="Concentration" />
+            <NumberInput className={tw(`flex-1`)} label="Concentration" />
             <Select
               className={tw(`flex-1`)}
               data={concentationUnitOptions.map((opt) => ({ label: opt, value: opt }))}

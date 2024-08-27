@@ -70,14 +70,15 @@ function createTextField(name = '', description = '', inputType: InputType = 'te
     required: true,
   };
   switch (inputType) {
+    case 'textarea':
+      return { ...baseInput, fieldType: 'free-text', inputType, length: 'long' };
     case 'text':
     case 'number':
     case 'email':
     case 'password':
     case 'tel':
+    default:
       return { ...baseInput, fieldType: 'free-text', inputType, length: 'short' };
-    case 'textarea':
-      return { ...baseInput, fieldType: 'free-text', inputType, length: 'long' };
   }
 }
 
@@ -383,10 +384,16 @@ export default function NewFormBuilder() {
   const [formIsSnapshot, setFormIsSnapshot] = useState(false);
   const [loadingSave, setLoadingSave] = useState(false);
 
-  const params = new URLSearchParams(window.location.search);
-  const formId = params.get('formId');
-
+  const [formId, setFormId] = useState<string | null>('');
   const [loadingForm, setLoadingForm] = useState(formId && formId.length > 5);
+
+  /** Set the formID on render */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const formId = params.get('formId');
+
+    setFormId(formId);
+  }, []);
 
   /** If there is a formID, then we are editing a form, fetch this form */
   useEffect(() => {

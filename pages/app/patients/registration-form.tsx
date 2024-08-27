@@ -17,17 +17,17 @@ import { Fragment, useEffect, useMemo, useReducer, useState } from 'react';
 import { tw } from 'twind';
 import { useImmer, useImmerReducer } from 'use-immer';
 import { v1 as uuidv1, v4 as uuidv4 } from 'uuid';
-import If from '../../components/If';
-import AppLayout from '../../components/Layout';
-import { FieldType, InputType } from '../../types/Inputs';
-import { FreeTextInput, OptionsInput } from './new-form';
+import If from '../../../components/If';
+import AppLayout from '../../../components/Layout';
+import { FieldType, InputType } from '../../../types/Inputs';
+import { FreeTextInput, OptionsInput } from '../new-form';
 import axios from 'axios';
 import { useRouter } from 'next/router';
-import { mapObjectValues } from '../../utils/misc';
+import { mapObjectValues } from '../../../utils/misc';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
-const inputTypes = ['number', 'text', 'select', 'date'] as const;
+const inputTypes = ['number', 'text', 'select', 'date', 'boolean'] as const;
 
 type DefaultLanguages = {
   en: string;
@@ -831,7 +831,7 @@ export default function PatientRegistrationForm() {
                           draft.id = id;
                         });
                       }}
-                      compact
+                      size="compact-sm"
                     >
                       Edit Field
                     </Button>
@@ -843,7 +843,7 @@ export default function PatientRegistrationForm() {
                         onClick={() =>
                           dispatch({ type: 'remove-field', payload: { id: field.id } })
                         }
-                        compact
+                        size="compact-sm"
                       >
                         Delete Field
                       </Button>

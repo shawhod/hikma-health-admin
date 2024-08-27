@@ -57,7 +57,7 @@ export default function UsersList() {
         .then((users) => {
           console.log({ users });
           setUsers(users);
-          setLoading(false)
+          setLoading(false);
         })
         .catch((err) => console.log(err));
     }
@@ -83,12 +83,12 @@ export default function UsersList() {
   };
 
   const ths = (
-    <tr>
-      <th>Username</th>
-      <th>Role</th>
-      <th>Email</th>
-      <th>Actions</th>
-    </tr>
+    <Table.Tr>
+      <Table.Th>Username</Table.Th>
+      <Table.Th>Role</Table.Th>
+      <Table.Th>Email</Table.Th>
+      <Table.Th>Actions</Table.Th>
+    </Table.Tr>
   );
 
   const editUser = (user: User) =>
@@ -98,40 +98,36 @@ export default function UsersList() {
     });
 
   const rows = users.map((user) => (
-    <tr key={user.id}>
-      <td>{user.name}</td>
-      <td>{user.role}</td>
-      <td>{user.email}</td>
-      <td>
-        {user.role !== 'super_admin' && (
-          <div className={tw('flex space-x-4')}>
-            <ActionIcon onClick={() => confirmDelete(user.email)}>
-              <IconTrash size="1rem" color="red" />
-            </ActionIcon>
-            <ActionIcon onClick={() => editUser(user)}>
-              <IconEdit size="1rem" color="blue" />
-            </ActionIcon>
-          </div>
-        )}
-      </td>
-    </tr>
+    <Table.Tr key={user.id}>
+      <Table.Td>{user.name}</Table.Td>
+      <Table.Td>{user.role}</Table.Td>
+      <Table.Td>{user.email}</Table.Td>
+      <Table.Td>
+        <div className={tw('flex space-x-4')}>
+          <ActionIcon variant="transparent" onClick={() => confirmDelete(user.email)}>
+            <IconTrash size="1rem" color="red" />
+          </ActionIcon>
+          <ActionIcon variant="transparent" onClick={() => editUser(user)}>
+            <IconEdit size="1rem" color="blue" />
+          </ActionIcon>
+        </div>
+      </Table.Td>
+    </Table.Tr>
   ));
   return (
     <>
       <AppLayout title="Users List">
         <div>
           <Table striped highlightOnHover>
-            <thead>{ths}</thead>
-            <tbody>{rows}</tbody>
+            <Table.Thead>{ths}</Table.Thead>
+            <Table.Tbody>{rows}</Table.Tbody>
           </Table>
         </div>
-  <div className={tw("flex justify-center my-6 w-full")}>
-      {loading && <Loader size="xl" />}
-      </div>
-
+        <div className={tw('flex justify-center my-6 w-full')}>
+          {loading && <Loader size="xl" />}
+        </div>
       </AppLayout>
       <FAB onClick={openRegisterUserForm} />
     </>
   );
 }
-

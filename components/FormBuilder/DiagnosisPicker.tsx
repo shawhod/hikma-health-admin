@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MultiSelect } from '@mantine/core';
-import icd10 from '../../data/icd10-xs.json'; // Importing the extra small ICD10 JSON file
+import icd11 from '../../data/icd11-xs.js'; // Importing the extra small ICD10 JSON file
 import { HHField, HHFieldWithPosition } from '../../types/Inputs';
 
 type Props = {
@@ -9,12 +9,13 @@ type Props = {
 
 export function DiagnosisSelect({ field }: Props) {
   const [data, setData] = useState(
-    icd10.map((item) => ({
+    icd11.map((item) => ({
       value: `${item.desc} (${item.code})`,
       label: `${item.desc} (${item.code})`,
     }))
   );
 
+  // FIXME: Need to replace the diagnosis picker with new select item from `react-select` with better creatable support
   return (
     <MultiSelect
       label={field.name}
@@ -25,13 +26,12 @@ export function DiagnosisSelect({ field }: Props) {
       searchable
       maxDropdownHeight={160}
       limit={20}
-      creatable
-      getCreateLabel={(query) => `+ Add ${query}`}
-      onCreate={(query) => {
-        const item = { value: query, label: query };
-        setData((current) => [...current, item]);
-        return item;
-      }}
+      // getCreateLabel={(query) => `+ Add ${query}`}
+      // onCreate={(query) => {
+      // const item = { value: query, label: query };
+      // setData((current) => [...current, item]);
+      // return item;
+      // }}
     />
   );
 }

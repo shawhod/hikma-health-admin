@@ -61,17 +61,30 @@ export default function Login() {
   };
   return (
     <Container size="sm" my={60}>
-      <Title
-        align="center"
-      >
-        Hikma Health Administrators
-      </Title>
+      <Title style={{ textAlign: 'center' }}>Hikma Health Administrators</Title>
 
       <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-        <TextInput label="Email" value={email} onChange={e => setEmail(e.currentTarget.value)} placeholder="you@hikmahealth.org" required />
-        <PasswordInput label="Password" placeholder="Your password" required mt="md" value={password} onChange={e => setPassword(e.currentTarget.value)} />
-        <Group position="apart" mt="lg">
-          <Checkbox checked={remember} onChange={e => setRemember(e.currentTarget.checked)} label="Remember me" />
+        <TextInput
+          label="Email"
+          value={email}
+          onChange={(e) => setEmail(e.currentTarget.value)}
+          placeholder="you@hikmahealth.org"
+          required
+        />
+        <PasswordInput
+          label="Password"
+          placeholder="Your password"
+          required
+          mt="md"
+          value={password}
+          onChange={(e) => setPassword(e.currentTarget.value)}
+        />
+        <Group justify="space-between" mt="lg">
+          <Checkbox
+            checked={remember}
+            onChange={(e) => setRemember(e.currentTarget.checked)}
+            label="Remember me"
+          />
         </Group>
         <Button loading={isLoading || loadingAuth} onClick={handleLogin} fullWidth mt="xl">
           Sign in

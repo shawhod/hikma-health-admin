@@ -1,22 +1,20 @@
 import { useState, useEffect } from 'react';
 import {
   AppShell,
-  Navbar,
+  // Navbar,
   Title,
-  Header,
   Text,
-  MediaQuery,
   Burger,
   useMantineTheme,
   Group,
   Box,
   UnstyledButton,
   ScrollArea,
-  createStyles,
   rem,
   Avatar,
   Loader,
 } from '@mantine/core';
+import { createStyles } from '@mantine/emotion';
 import {
   IconCalendarStats,
   IconChevronLeft,
@@ -40,9 +38,9 @@ const navLinks = [
     icon: IconNotes,
     initiallyOpened: true,
     links: [
-      { label: 'Patients List', link: '/app/patients-list' },
-      { label: 'Registration Form', link: '/app/patient-registration-form' },
-      /*       { label: 'Register Patient', link: '/app/register-patient' }, */
+      { label: 'Patients List', link: '/app/patients/list' },
+      { label: 'Registration Form', link: '/app/patients/registration-form' },
+      { label: 'Register Patient', link: '/app/patients/register' },
     ],
   },
   {
@@ -61,9 +59,14 @@ const navLinks = [
   { label: 'Raw Data / Export Events', icon: IconAdjustments, link: '/app/exports' },
 ];
 
-const useStyles = createStyles((theme) => ({
+const useStyles = createStyles((theme, _, u) => ({
   navbar: {
-    backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.white,
+    [u.dark]: {
+      backgroundColor: theme.colors.dark[6],
+    },
+    [u.light]: {
+      backgroundColor: theme.white,
+    },
     paddingBottom: 0,
   },
 
@@ -80,9 +83,12 @@ const useStyles = createStyles((theme) => ({
   footer: {
     marginLeft: `calc(${theme.spacing.md} * -1)`,
     marginRight: `calc(${theme.spacing.md} * -1)`,
-    borderTop: `${rem(1)} solid ${
-      theme.colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[3]
-    }`,
+    [u.dark]: {
+      borderTop: `${rem(1)} solid ${theme.colors.dark[4]}`,
+    },
+    [u.light]: {
+      borderTop: `${rem(1)} solid ${theme.colors.gray[3]}`,
+    },
   },
 }));
 
@@ -117,46 +123,50 @@ export default function AppLayout(props: Props) {
   const links = navLinks.map((item) => <LinksGroup {...item} key={item.label} />);
   return (
     <AppShell
-      styles={{
+      padding="md"
+      styles={(theme, _, u) => ({
         main: {
-          background: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
+          [u.dark]: {
+            background: theme.colors.dark[8],
+          },
+          [u.light]: {
+            background: theme.colors.gray[0],
+          },
         },
-      }}
-      navbarOffsetBreakpoint="sm"
-      asideOffsetBreakpoint="sm"
-      navbar={
-        <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{ sm: 200, lg: 300 }}>
-          <Navbar.Section grow className={classes.links} component={ScrollArea}>
-            <div className={classes.linksInner}>
-              {links}
-              <div onClick={confirmSignOut}>
-                <LinksGroup icon={IconDoorExit} label="Sign Out" />
-              </div>
-            </div>
-          </Navbar.Section>
-
-          <Navbar.Section className={classes.footer}>{/* <User /> */}</Navbar.Section>
-        </Navbar>
-      }
-      header={
-        <Header height={{ base: 50, md: 70 }} p="md">
-          <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-            <MediaQuery largerThan="sm" styles={{ display: 'none' }}>
-              <Burger
-                opened={opened}
-                onClick={() => setOpened((o) => !o)}
-                size="sm"
-                color={theme.colors.gray[6]}
-                mr="xl"
-              />
-            </MediaQuery>
-
-            <Text fz="xl">Hikma Health Admin</Text>
-          </div>
-        </Header>
-      }
+      })}
+      // navbarOffsetBreakpoint="sm"
+      // asideOffsetBreakpoint="sm"
+      navbar={{ width: { sm: 200, lg: 300 }, breakpoint: 'md', collapsed: { mobile: !opened } }}
+      header={{ height: { base: 50, md: 70 } }}
     >
-      <div>
+      <AppShell.Header p="md">
+        <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+          <Burger
+            opened={opened}
+            onClick={() => setOpened((o) => !o)}
+            size="sm"
+            hiddenFrom="md"
+            color={theme.colors.gray[6]}
+            mr="xl"
+          />
+
+          <Text fz="xl">Hikma Health Admin</Text>
+        </div>
+      </AppShell.Header>
+
+      <AppShell.Navbar p="md">
+        <AppShell.Section grow className={classes.links} component={ScrollArea}>
+          <div className={classes.linksInner}>
+            {links}
+            <div onClick={confirmSignOut}>
+              <LinksGroup icon={IconDoorExit} label="Sign Out" />
+            </div>
+          </div>
+        </AppShell.Section>
+
+        <AppShell.Section className={classes.footer}>{/* <User /> */}</AppShell.Section>
+      </AppShell.Navbar>
+      <AppShell.Main>
         <Title order={1}>{title}</Title>
         {isLoading ? (
           <div className={tw('flex justify-center my-6 w-full')}>
@@ -165,58 +175,58 @@ export default function AppLayout(props: Props) {
         ) : (
           children
         )}
-      </div>
+      </AppShell.Main>
     </AppShell>
   );
 }
 
-export function User() {
-  const theme = useMantineTheme();
+// export function User() {
+//   const theme = useMantineTheme();
 
-  return (
-    <Box
-      sx={{
-        paddingTop: theme.spacing.sm,
-        borderTop: `${rem(1)} solid ${
-          theme.colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[2]
-        }`,
-      }}
-    >
-      <UnstyledButton
-        sx={{
-          display: 'block',
-          width: '100%',
-          padding: theme.spacing.xs,
-          borderRadius: theme.radius.sm,
-          color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
+//   return (
+//     <Box
+//       sx={{
+//         paddingTop: theme.spacing.sm,
+//         borderTop: `${rem(1)} solid ${
+//           theme.colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[2]
+//         }`,
+//       }}
+//     >
+//       <UnstyledButton
+//         sx={{
+//           display: 'block',
+//           width: '100%',
+//           padding: theme.spacing.xs,
+//           borderRadius: theme.radius.sm,
+//           color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
 
-          '&:hover': {
-            backgroundColor:
-              theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[0],
-          },
-        }}
-      >
-        <Group>
-          <Avatar
-            src="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=255&q=80"
-            radius="xl"
-          />
-          <Box sx={{ flex: 1 }}>
-            <Text size="sm" weight={500}>
-              Amy Horsefighter
-            </Text>
-            <Text color="dimmed" size="xs">
-              ahorsefighter@gmail.com
-            </Text>
-          </Box>
+//           '&:hover': {
+//             backgroundColor:
+//               theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[0],
+//           },
+//         }}
+//       >
+//         <Group>
+//           <Avatar
+//             src="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=255&q=80"
+//             radius="xl"
+//           />
+//           <Box sx={{ flex: 1 }}>
+//             <Text size="sm" weight={500}>
+//               Amy Horsefighter
+//             </Text>
+//             <Text color="dimmed" size="xs">
+//               ahorsefighter@gmail.com
+//             </Text>
+//           </Box>
 
-          {theme.dir === 'ltr' ? (
-            <IconChevronRight size={rem(18)} />
-          ) : (
-            <IconChevronLeft size={rem(18)} />
-          )}
-        </Group>
-      </UnstyledButton>
-    </Box>
-  );
-}
+//           {theme.dir === 'ltr' ? (
+//             <IconChevronRight size={rem(18)} />
+//           ) : (
+//             <IconChevronLeft size={rem(18)} />
+//           )}
+//         </Group>
+//       </UnstyledButton>
+//     </Box>
+//   );
+// }

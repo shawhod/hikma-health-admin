@@ -3,7 +3,6 @@ import { Menu, Button, TextInput, NumberInput, Textarea, Select, Box } from '@ma
 import { DatePickerInput } from '@mantine/dates';
 import { v1 as uuidV1 } from 'uuid';
 import axios from 'axios';
-import { tw } from 'twind';
 import AppLayout from '../../../components/Layout';
 import { usePatientRegistrationForm } from '../../../hooks/usePatientRegistrationForm';
 import { useForm } from '@mantine/form';
@@ -159,7 +158,7 @@ export default function RegisterPatient() {
   return (
     <AppLayout title="Register Patient" isLoading={isLoadingForm}>
       <form onSubmit={form.onSubmit(createPatient)} ref={formRef}>
-        <Box style={{ maxWidth: 500 }} className={tw('space-y-4')}>
+        <Box style={{ maxWidth: 500 }} className="space-y-4">
           {patientRegistrationForm?.fields
             .filter((field) => field.visible && field.deleted !== true)
             .map((field) => {
@@ -210,7 +209,7 @@ export default function RegisterPatient() {
               return <Box></Box>;
             })}
 
-          <Button type="submit" loading={loadingSubmission}>
+          <Button type="submit" loading={loadingSubmission} className="primary" fullWidth>
             Submit
           </Button>
         </Box>

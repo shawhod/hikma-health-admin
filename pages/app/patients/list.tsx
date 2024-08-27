@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ActionIcon, Button, Loader, Table } from '@mantine/core';
-import { tw } from 'twind';
 import AppLayout from '../../../components/Layout';
 import { Patient } from '../../../types/Patient';
 import { differenceBy, isEqual, isEqualWith, replace } from 'lodash';
@@ -207,9 +206,7 @@ export default function PatientsList() {
           </Table>
         </Table.ScrollContainer>
 
-        <div className={tw('flex justify-center my-6 w-full')}>
-          {loading && <Loader size="xl" />}
-        </div>
+        <div className="flex justify-center my-6 w-full">{loading && <Loader size="xl" />}</div>
       </AppLayout>
       <ActionIcon
         style={{

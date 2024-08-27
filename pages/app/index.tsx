@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { tw } from 'twind';
 import { Title, Paper, Loader } from '@mantine/core';
 import AppLayout from '../../components/Layout';
 import { DashboardStatsGrid } from '../../components/DashboardStatsGrid';
@@ -117,9 +116,9 @@ export default function Dashboard() {
     <AppLayout title="Dashboard">
       <DashboardStatsGrid data={summaryData} />
 
-      <div className={tw('flex justify-center my-6 w-full')}>{loading && <Loader size="xl" />}</div>
+      <div className="flex justify-center my-6 w-full">{loading && <Loader size="xl" />}</div>
       <div>
-        <Paper shadow="xs" className={tw('h-64 flex items-center justify-center')} p="xl">
+        <Paper shadow="xs" className="h-64 flex items-center justify-center" p="xl">
           <Title order={3}>Add your organization's important information here</Title>
         </Paper>
       </div>

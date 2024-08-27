@@ -29,7 +29,6 @@ import {
 import { useRouter } from 'next/router';
 import { LinksGroup } from './LinksGroup';
 import { useAuthStatus } from '../hooks/useUser';
-import { tw } from 'twind';
 
 const navLinks = [
   { label: 'Dashboard', icon: IconGauge, link: '/app' },
@@ -169,7 +168,7 @@ export default function AppLayout(props: Props) {
       <AppShell.Main>
         <Title order={1}>{title}</Title>
         {isLoading ? (
-          <div className={tw('flex justify-center my-6 w-full')}>
+          <div className="flex justify-center my-6 w-full">
             <Loader size="xl" />
           </div>
         ) : (

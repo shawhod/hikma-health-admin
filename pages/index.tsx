@@ -86,7 +86,13 @@ export default function Login() {
             label="Remember me"
           />
         </Group>
-        <Button loading={isLoading || loadingAuth} onClick={handleLogin} fullWidth mt="xl">
+        <Button
+          loading={isLoading || loadingAuth}
+          onClick={handleLogin}
+          fullWidth
+          mt="xl"
+          className="primary"
+        >
           Sign in
         </Button>
       </Paper>

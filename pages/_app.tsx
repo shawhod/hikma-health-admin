@@ -1,5 +1,5 @@
-import '@mantine/core/styles.css';
-import '@mantine/dates/styles.css';
+import install from '@twind/with-next/app';
+import config from '../twind.config';
 
 import { useState } from 'react';
 import NextApp, { AppProps, AppContext } from 'next/app';
@@ -16,10 +16,12 @@ import { Notifications } from '@mantine/notifications';
 import './index.css';
 import { emotionTransform, MantineEmotionProvider } from '@mantine/emotion';
 import { emotionCache } from '../emotion/cache';
+import '@mantine/core/styles.css';
+import '@mantine/dates/styles.css';
 
 const theme = createTheme({});
 
-export default function App(props: AppProps & { colorScheme: MantineColorScheme }) {
+function App(props: AppProps & { colorScheme: MantineColorScheme }) {
   const { Component, pageProps } = props;
   // const { setColorScheme, clearColorScheme, colorScheme } = useMantineColorScheme();
 
@@ -64,3 +66,5 @@ App.getInitialProps = async (appContext: AppContext) => {
     colorScheme: getCookie('mantine-color-scheme', appContext.ctx) || 'dark',
   };
 };
+
+export default install(config, App);

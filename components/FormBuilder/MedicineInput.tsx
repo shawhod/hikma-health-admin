@@ -33,7 +33,6 @@ import {
   IconTrash,
   IconArrowsLeftRight,
 } from '@tabler/icons-react';
-import { tw } from 'twind';
 import { upperFirst, lowerCase, eq } from 'lodash';
 import {
   TextField,
@@ -95,36 +94,36 @@ export const MedicineInput = React.memo(
     console.log('MEDICINE INPUT', field);
     return (
       <div>
-        <h4 className={tw(`text-lg font-bold`)}>{field?.name || 'Medicine'}</h4>
-        <h6 className={tw(`text-sm text-gray-500`)}>
+        <h4 className="text-lg font-bold">{field?.name || 'Medicine'}</h4>
+        <h6 className={`text-sm text-gray-500`}>
           {field?.description || 'Enter the medicine details'}
         </h6>
-        <div className={tw('space-y-3')}>
-          <div className={tw(`flex space-between space-x-4`)}>
-            <TextInput className={tw(`flex-1`)} label="Medicine Name" />
+        <div className="space-y-3">
+          <div className={`flex space-between space-x-4`}>
+            <TextInput className={`flex-1`} label="Medicine Name" />
             <Select
               data={formOptions.map((opt) => ({ label: upperFirst(opt), value: opt }))}
               label="Medicine Form"
             />
           </div>
 
-          <div className={tw(`flex space-between space-x-4`)}>
-            <NumberInput className={tw(`flex-1`)} label="Concentration" />
+          <div className={`flex space-between space-x-4`}>
+            <NumberInput className={`flex-1`} label="Concentration" />
             <Select
-              className={tw(`flex-1`)}
+              className={`flex-1`}
               data={concentationUnitOptions.map((opt) => ({ label: opt, value: opt }))}
               label="Unit"
             />
           </div>
 
-          <div className={tw(`flex space-between space-x-4`)}>
+          <div className={`flex space-between space-x-4`}>
             <TextInput
-              className={tw(`flex-1`)}
+              className={`flex-1`}
               label="Frequency & Duration"
               placeholder="1 x 3 x 4 days"
             />
             <Select
-              className={tw(`flex-1`)}
+              className={`flex-1`}
               data={routeOptions.map((opt) => ({ label: upperFirst(opt), value: opt }))}
               label="Route"
             />

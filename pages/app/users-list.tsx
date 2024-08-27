@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Loader, ActionIcon, Table } from '@mantine/core';
-import { tw } from 'twind';
 import { IconTrash, IconEdit, IconPlus } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import AppLayout from '../../components/Layout';
@@ -103,7 +102,7 @@ export default function UsersList() {
       <Table.Td>{user.role}</Table.Td>
       <Table.Td>{user.email}</Table.Td>
       <Table.Td>
-        <div className={tw('flex space-x-4')}>
+        <div className="flex space-x-4">
           <ActionIcon variant="transparent" onClick={() => confirmDelete(user.email)}>
             <IconTrash size="1rem" color="red" />
           </ActionIcon>
@@ -123,9 +122,7 @@ export default function UsersList() {
             <Table.Tbody>{rows}</Table.Tbody>
           </Table>
         </div>
-        <div className={tw('flex justify-center my-6 w-full')}>
-          {loading && <Loader size="xl" />}
-        </div>
+        <div className="flex justify-center my-6 w-full">{loading && <Loader size="xl" />}</div>
       </AppLayout>
       <FAB onClick={openRegisterUserForm} />
     </>

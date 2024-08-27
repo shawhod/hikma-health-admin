@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Table, ActionIcon, Loader, Checkbox } from '@mantine/core';
-import { tw } from 'twind';
-import { v1 as uuidV1 } from 'uuid';
 import { useRouter } from 'next/router';
 import { IconTrash, IconEdit, IconPlus } from '@tabler/icons-react';
 import { differenceBy, omit, pick, truncate } from 'lodash';
@@ -9,6 +7,7 @@ import AppLayout from '../../components/Layout';
 import { FAB } from '../../components/FAB';
 import { HHForm } from '../../types/Inputs';
 import hikmaFormTemplates from '../../data/hikma-form-templates';
+import { v1 as uuidV1 } from 'uuid';
 import axios from 'axios';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
@@ -218,7 +217,7 @@ export default function FormsList() {
       <Table.Td>{truncate(form.description, { length: 32 })}</Table.Td>
       <Table.Td>{form.created_at}</Table.Td>
       <Table.Td>
-        <div className={tw('flex space-x-4')}>
+        <div className="flex space-x-4">
           <ActionIcon variant="transparent" onClick={() => confirmDelete(form.id)}>
             <IconTrash size="1rem" color="red" />
           </ActionIcon>
@@ -237,18 +236,16 @@ export default function FormsList() {
       <AppLayout title="Forms List">
         {filteredTemplates.length > 0 && (
           <div>
-            <h3 className={tw('text-lg')}>Click to install recommended form</h3>
+            <h3 className="text-lg">Click to install recommended form</h3>
 
-            <div className={tw('flex flex-wrap gap-3')}>
+            <div className="flex flex-wrap gap-3">
               {filteredTemplates.map((form) => (
                 <div
                   onClick={confirmCreateForm(form as any)}
-                  className={tw(
-                    'shadow-sm border border-gray-200 dark:border-gray-700 rounded p-2 hover:cursor-pointer hover:shadow-xl'
-                  )}
+                  className="shadow-sm border border-gray-200 dark:border-gray-700 rounded p-2 hover:cursor-pointer hover:shadow-xl"
                   key={form.id}
                 >
-                  <h4 className={tw('text-md')}>
+                  <h4 className="text-md">
                     {loadingFormTemplate === form.name ? 'loading ....' : form.name}
                   </h4>
                 </div>
@@ -256,14 +253,12 @@ export default function FormsList() {
             </div>
           </div>
         )}
-        <Table verticalSpacing="md" className={tw('my-6')} striped highlightOnHover withRowBorders>
+        <Table verticalSpacing="md" className="my-6" striped highlightOnHover withRowBorders>
           <Table.Thead>{ths}</Table.Thead>
           <Table.Tbody>{rows}</Table.Tbody>
         </Table>
 
-        <div className={tw('flex justify-center my-6 w-full')}>
-          {isLoading && <Loader size="xl" />}
-        </div>
+        <div className="flex justify-center my-6 w-full">{isLoading && <Loader size="xl" />}</div>
       </AppLayout>
 
       <FAB onClick={openCreateNewForm} />

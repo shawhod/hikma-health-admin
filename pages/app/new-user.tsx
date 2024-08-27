@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { upperFirst } from 'lodash';
 import { TextInput, Select, Button } from '@mantine/core';
-import { tw } from 'twind';
 import AppLayout from '../../components/Layout';
 import { User } from '../../types/User';
 import axios from 'axios';
@@ -30,11 +29,10 @@ const addUser = async (user: User & { password: string }, token: string): Promis
 
 export const userRoles = ['provider', 'admin'];
 
-
 type Clinic = {
-  id: string
-  name: string
-}
+  id: string;
+  name: string;
+};
 
 export default function NewUser() {
   const [user, setUser] = useState<User & { password: string }>({
@@ -46,7 +44,7 @@ export default function NewUser() {
     password: '',
   });
   const [loading, setLoading] = useState(false);
-  const [clinics, setClinics] = useState<Clinic[]>([])
+  const [clinics, setClinics] = useState<Clinic[]>([]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -56,12 +54,13 @@ export default function NewUser() {
         headers: {
           Authorization: String(token),
         },
-      }).then(res => {
-        console.log(res.data)
-        setClinics(res.data?.clinics || [])
-      }).catch(error => console.error(error))
-
-  }, [])
+      })
+      .then((res) => {
+        console.log(res.data);
+        setClinics(res.data?.clinics || []);
+      })
+      .catch((error) => console.error(error));
+  }, []);
 
   const updateField = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUser({
@@ -83,7 +82,7 @@ export default function NewUser() {
     if (token) {
       await addUser(user, token).then((result) => {
         console.log(result);
-        alert("User registered successfully.");
+        alert('User registered successfully.');
         setUser({
           id: '',
           name: '',
@@ -91,7 +90,7 @@ export default function NewUser() {
           email: '',
           clinic_id: '',
           password: '',
-        })
+        });
       });
     }
     setLoading(false);
@@ -100,7 +99,7 @@ export default function NewUser() {
   return (
     <AppLayout title="New User">
       <form onSubmit={confirmSubmit}>
-        <div className={tw('max-w-md space-y-4')}>
+        <div className="max-w-md space-y-4">
           <TextInput onChange={updateField} label="Username" name="name" required />
           <Select
             label="User Role"
@@ -112,17 +111,15 @@ export default function NewUser() {
             label="Clinic"
             placeholder="Select one"
             onChange={(value) => setUser({ ...user, clinic_id: value || '' })}
-            data={
-              clinics.map(clinic => ({
-                value: clinic.id,
-                label: upperFirst(clinic.name)
-              }))
-            }
+            data={clinics.map((clinic) => ({
+              value: clinic.id,
+              label: upperFirst(clinic.name),
+            }))}
           />
           <TextInput label="Email" name="email" required onChange={updateField} />
           <TextInput label="Password" name="password" required onChange={updateField} />
 
-          <Button onClick={confirmSubmit} loading={loading} fullWidth>
+          <Button onClick={confirmSubmit} loading={loading} fullWidth className="primary">
             Submit
           </Button>
         </div>

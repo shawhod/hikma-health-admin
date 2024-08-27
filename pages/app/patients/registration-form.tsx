@@ -14,7 +14,6 @@ import * as z from 'zod';
 import { DESTRUCTION } from 'dns';
 import { curry, sortBy } from 'lodash';
 import { Fragment, useEffect, useMemo, useReducer, useState } from 'react';
-import { tw } from 'twind';
 import { useImmer, useImmerReducer } from 'use-immer';
 import { v1 as uuidv1, v4 as uuidv4 } from 'uuid';
 import If from '../../../components/If';
@@ -752,7 +751,7 @@ export default function PatientRegistrationForm() {
   // const language = "en"
   return (
     <AppLayout isLoading={loadingForm} title="Patient Registration Form">
-      <div className={tw('max-w-lg space-y-4 pt-6')}>
+      <div className="max-w-lg space-y-4 pt-6">
         <Select
           label="Language"
           placeholder="Choose"
@@ -767,7 +766,7 @@ export default function PatientRegistrationForm() {
         />
       </div>
 
-      <div className={tw('max-w-lg space-y-4 pt-6')}>
+      <div className="max-w-lg space-y-4 pt-6">
         {sortBy(fields, 'position')
           .filter((f) => !f.deleted)
           .map((field) => {
@@ -776,7 +775,7 @@ export default function PatientRegistrationForm() {
             const isInEditMode = editField.id === id;
             return (
               <div
-                className={tw(`border border-[${isInEditMode ? '#1d4ed8' : '#555'}] rounded p-4`)}
+                className={`border border-[${isInEditMode ? '#1d4ed8' : '#555'}] rounded p-4`}
                 key={field.id}
               >
                 {fieldType === 'select' && (
@@ -851,7 +850,7 @@ export default function PatientRegistrationForm() {
                   </Flex>
                 )}
                 {editField.id === id && (
-                  <div className={tw('mt-6 border-t border-[#333] pt-6')}>
+                  <div className="mt-6 border-t border-[#333] pt-6">
                     <Grid>
                       {Object.keys(field.label).map((languageKey) => {
                         return (
@@ -924,10 +923,7 @@ export default function PatientRegistrationForm() {
                                       }
                                     />
                                   </Grid.Col>
-                                  <Grid.Col
-                                    span={1}
-                                    className={tw('flex items-end justify-center')}
-                                  >
+                                  <Grid.Col span={1} className="flex items-end justify-center">
                                     <Button
                                       size="sm"
                                       variant="subtle"
@@ -973,7 +969,7 @@ export default function PatientRegistrationForm() {
                                 </Flex>
 
                                 {/*Except for english, loop over the other languages and show them and their translations*/}
-                                <div className={tw('pl-8 space-y-2 pb-5')}>
+                                <div className="pl-8 space-y-2 pb-5">
                                   {Object.keys(option)
                                     .filter((k) => k !== 'en')
                                     .map((languageKey) => (
@@ -997,7 +993,7 @@ export default function PatientRegistrationForm() {
                                             }
                                           />
                                         </Grid.Col>
-                                        <Grid.Col span={2} className={tw('flex items-end')}>
+                                        <Grid.Col span={2} className="flex items-end">
                                           <Button
                                             size="sm"
                                             variant="subtle"
@@ -1020,7 +1016,7 @@ export default function PatientRegistrationForm() {
                           <Button
                             fullWidth
                             variant={'outline'}
-                            className={tw('my-2')}
+                            className="my-2"
                             onClick={() => dispatch({ type: 'add-select-option', payload: { id } })}
                           >
                             Add Select Option
@@ -1028,7 +1024,7 @@ export default function PatientRegistrationForm() {
                         </Grid.Col>
                       )}
 
-                      <Grid.Col span={12} className={tw('space-y-3')}>
+                      <Grid.Col span={12} className="space-y-3">
                         <Checkbox
                           checked={field.visible}
                           onChange={() => dispatch({ type: 'toggle-visibility', payload: { id } })}
@@ -1106,11 +1102,17 @@ export default function PatientRegistrationForm() {
           </div>
         )}
 
-        <Button onClick={() => dispatch({ type: 'add-field' })} fullWidth>
+        <Button onClick={() => dispatch({ type: 'add-field' })} fullWidth variant="outline">
           + Add Field
         </Button>
 
-        <Button loading={loading} disabled={loading} className="mt-4" onClick={submit} fullWidth>
+        <Button
+          loading={loading}
+          disabled={loading}
+          className="mt-4 primary"
+          onClick={submit}
+          fullWidth
+        >
           {loading ? 'Loading ...' : 'Submit'}
         </Button>
       </div>

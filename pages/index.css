@@ -2,6 +2,10 @@ html, body {
   margin: 0;
 }
 
+button.primary {
+  background-color: #1971c2 !important;
+}
+
 /** SELECT COMPONENTS */
 .dark-select {
   border: 1px solid red;

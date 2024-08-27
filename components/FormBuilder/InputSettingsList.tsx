@@ -12,7 +12,6 @@ import {
 } from '@mantine/core';
 import CreatableSelect from 'react-select/creatable';
 import { createStyles } from '@mantine/emotion';
-import { tw } from 'twind';
 import { upperFirst, lowerCase } from 'lodash';
 import { useListState } from '@mantine/hooks';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -143,8 +142,8 @@ export function InputSettingsList({
           <div {...provided.dragHandleProps} className={classes.dragHandle}>
             <IconGripVertical size="1.05rem" stroke={1.5} />
           </div>
-          <div className={tw('w-full')}>
-            <h3 className={tw('text-lg font-bold')}>{upperFirst(item.inputType)} Input</h3>
+          <div className="w-full">
+            <h3 className="text-lg font-bold">{upperFirst(item.inputType)} Input</h3>
             <TextInput
               label={'Name'}
               defaultValue={item.name}
@@ -207,7 +206,7 @@ export function InputSettingsList({
 
             {item.inputType === 'number' && (
               <Checkbox
-                className={tw('py-2')}
+                className="py-2"
                 onChange={(e) =>
                   onFieldUnitChange(
                     item.id,
@@ -221,7 +220,7 @@ export function InputSettingsList({
 
             {item.fieldType === 'options' && item.inputType === 'select' && (
               <Checkbox
-                className={tw('py-2')}
+                className="py-2"
                 onChange={(e) => onFieldChange(item.id, 'multi', e.currentTarget.checked)}
                 checked={item.multi}
                 label="Supports multiple options"
@@ -229,17 +228,17 @@ export function InputSettingsList({
             )}
 
             <Checkbox
-              className={tw('py-2')}
+              className="py-2"
               onChange={(e) => onFieldChange(item.id, 'required', e.currentTarget.checked)}
               checked={item.required}
               label="Required Field"
             />
 
-            <div className={tw('pt-4')}>
+            <div className="pt-4">
               <Button
                 onClick={() => onRemoveField(item.id)}
-                compact
                 variant="subtle"
+                size="compact-xs"
                 color="red"
                 leftIcon={<IconTrash size="1rem" />}
               >

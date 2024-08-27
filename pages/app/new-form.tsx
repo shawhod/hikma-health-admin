@@ -37,7 +37,6 @@ import {
   IconArrowsLeftRight,
   IconReportMedical,
 } from '@tabler/icons-react';
-import { tw } from 'twind';
 import { omit, eq, sortBy } from 'lodash';
 import { Welcome } from '../../components/Welcome/Welcome';
 import { ColorSchemeToggle } from '../../components/ColorSchemeToggle/ColorSchemeToggle';
@@ -565,12 +564,12 @@ export default function NewFormBuilder() {
 
   return (
     <AppLayout title="Form Builder" isLoading={loadingForm}>
-      <Grid className={tw('m-0 ')} gap="4">
-        <Grid.Col span={5} className={tw('overflow-y-scroll h-screen px-2 pt-4')}>
-          {/*           <h4 className={tw('text-2xl mb-2')}>Form Builder</h4> */}
+      <Grid className="m-0 " gap="4">
+        <Grid.Col span={5} className="overflow-y-scroll h-screen px-2 pt-4">
+          {/*           <h4 className='text-2xl mb-2'>Form Builder</h4> */}
           <TextInput
             label="Form Title"
-            className={tw('mb-4')}
+            className="mb-4"
             onChange={(e) => setFormName(e.target.value)}
             value={formName}
             placeholder="Form Name"
@@ -579,7 +578,7 @@ export default function NewFormBuilder() {
             label="Form Language"
             searchable
             onChange={setLanguage}
-            className={tw('mb-4')}
+            className="mb-4"
             placeholder="Pick one"
             value={language}
             data={languageOptions}
@@ -587,21 +586,21 @@ export default function NewFormBuilder() {
           <Textarea
             label="Form Description"
             value={formDescription}
-            className={tw('mb-4')}
+            className="mb-4"
             onChange={(e) => setFormDescription(e.target.value)}
             placeholder="Form Description"
           />
           <Checkbox
             checked={formIsEditable}
             label="This form can be edited/updated after being submitted by clinicians"
-            className={tw('mb-4')}
+            className="mb-4"
             onChange={(event) => setFormIsEditable(event.currentTarget.checked)}
           />
 
           <Checkbox
             checked={formIsSnapshot}
             label="This form should appear on the quick snapshot view of the patient file"
-            className={tw('mb-4')}
+            className="mb-4"
             onChange={(event) => setFormIsSnapshot(event.currentTarget.checked)}
           />
 
@@ -616,16 +615,16 @@ export default function NewFormBuilder() {
           <br />
           <Divider my="sm" label="Add Input To Form" labelPosition="center" />
           <AddFormInputButtons addField={addField} />
-          <Button loading={loadingSave} onClick={handleSaveForm} fullWidth className={tw('my-8')}>
+          <Button loading={loadingSave} onClick={handleSaveForm} fullWidth className="my-8 primary">
             Save Form
           </Button>
         </Grid.Col>
         <Grid.Col
           dir={isRtlLanguage(language) ? 'rtl' : 'ltr'}
           span={7}
-          className={tw(`space-y-4 px-12 py-8 overflow-y-scroll h-screen`)}
+          className="space-y-4 px-12 py-8 overflow-y-scroll h-screen"
         >
-          <h4 className={tw('text-2xl mb-2')}>{formName}</h4>
+          <h4 className="text-2xl mb-2">{formName}</h4>
           {sortBy(Object.values(state), ['position']).map((field, idx) => {
             if (field.fieldType === 'options') {
               return <OptionsInput key={field.id + '_' + (field.position || idx)} field={field} />;
@@ -663,7 +662,13 @@ const AddFormInputButtons = React.memo(
     return (
       <Flex wrap="wrap" gap="sm">
         {inputAddButtons({ onClick: addField }).map((button) => (
-          <Button size="md" key={button.label} onClick={button.onClick} leftIcon={button.icon}>
+          <Button
+            size="md"
+            key={button.label}
+            onClick={button.onClick}
+            leftIcon={button.icon}
+            className="primary"
+          >
             {button.label}
           </Button>
         ))}
@@ -686,8 +691,8 @@ const WithUnits = ({
   const hasUnits = field.units && field.units.length > 0;
   console.log('Has units: ', field.units);
   return (
-    <div className={tw(`flex flex-row ${hasUnits ? 'space-x-4' : ''}`)}>
-      <div className={tw('flex-1')}> {children}</div>
+    <div className={`flex flex-row ${hasUnits ? 'space-x-4' : ''}`}>
+      <div className="flex-1"> {children}</div>
       {hasUnits && <Select label="Units" description=" " data={field.units} />}
     </div>
   );

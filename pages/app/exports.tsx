@@ -1,6 +1,5 @@
 import { Text, Button, Paper, SimpleGrid, Select, Table } from '@mantine/core';
 import React, { useEffect, useMemo, useState } from 'react';
-import { tw } from 'twind';
 import { endOfDay, format, isValid, startOfDay, subDays } from 'date-fns';
 import AppLayout from '../../components/Layout';
 import { Patient } from '../../types/Patient';
@@ -340,7 +339,7 @@ export default function ExportsPage() {
       </If>
 
       {/**
-      <table id="patientsList" className={tw('table-auto invisible')}>
+      <table id="patientsList" className='table-auto invisible'>
         <thead>
           <tr>
             <th>ID</th>

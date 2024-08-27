@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { upperFirst } from 'lodash';
 import { useRouter } from 'next/router';
 import { TextInput, Select, Button } from '@mantine/core';
-import { tw } from 'twind';
 import AppLayout from '../../components/Layout';
 import { User } from '../../types/User';
 import { userRoles } from './new-user';
@@ -50,7 +49,7 @@ export default function EditUser() {
       return;
     }
     if (window.confirm("Are you sure you want to reset this user's password?")) {
-      const token = localStorage.getItem('token') || "";
+      const token = localStorage.getItem('token') || '';
       setLoading(true);
       changePassword(user.email, password, token)
         .then((res) => {
@@ -70,14 +69,14 @@ export default function EditUser() {
     e.preventDefault();
     if (window.confirm('Are you sure you want to update this user?')) {
       // submit();
-      window.alert("Method not implemented yet")
+      window.alert('Method not implemented yet');
     }
   };
 
   return (
     <AppLayout title="Edit User">
       <form onSubmit={confirmSubmit}>
-        <div className={tw('max-w-md space-y-4')}>
+        <div className="max-w-md space-y-4">
           <TextInput
             value={user.name}
             onChange={updateField}
@@ -100,18 +99,18 @@ export default function EditUser() {
             onChange={updateField}
           />
 
-          <Button onClick={confirmSubmit} loading={loading} fullWidth>
+          <Button onClick={confirmSubmit} loading={loading} fullWidth className="primary">
             Update User
           </Button>
         </div>
       </form>
 
-      <hr className={tw('my-8')} />
+      <hr className="my-8" />
 
       {/* Reset Password */}
-      <div className={tw('')}>
-        <h2 className={tw('text-2xl font-bold mb-4')}>Reset Password</h2>
-        <div className={tw('max-w-md space-y-4')}>
+      <div className="">
+        <h2 className="text-2xl font-bold mb-4">Reset Password</h2>
+        <div className="max-w-md space-y-4">
           <TextInput
             label="Password"
             name="password"
@@ -119,7 +118,7 @@ export default function EditUser() {
             required
             onChange={(e) => setPassword(e.currentTarget.value)}
           />
-          <Button onClick={confirmResetPassword} loading={loading} fullWidth>
+          <Button onClick={confirmResetPassword} loading={loading} fullWidth className="primary">
             Reset Password
           </Button>
         </div>

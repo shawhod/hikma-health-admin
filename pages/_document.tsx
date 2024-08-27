@@ -1,3 +1,4 @@
+import install from '@twind/with-next/document';
 import NextDocument, { Head, Html, Main, NextScript } from 'next/document';
 // import { createGetInitialProps } from '@mantine/next';
 import createEmotionServer from '@emotion/server/create-instance';
@@ -6,29 +7,42 @@ import { createGetInitialProps } from '@mantine/emotion';
 // Import cache created in the previous step
 import { emotionCache } from '../emotion/cache';
 
-// const getInitialProps = createGetInitialProps(
-// NextDocument,
-// stylesServer
-// );
-
-// export default class _Document extends Document {
-// static getInitialProps = getInitialProps;
-// }
-
-export default function Document() {
-  return (
-    <Html lang="en">
-      <Head>
-        <ColorSchemeScript />
-      </Head>
-      <body>
-        <Main />
-        <NextScript />
-      </body>
-    </Html>
-  );
-}
-
 const stylesServer = createEmotionServer(emotionCache);
 
-Document.getInitialProps = createGetInitialProps(NextDocument, stylesServer);
+const getInitialProps = createGetInitialProps(NextDocument, stylesServer);
+
+class _Document extends NextDocument {
+  static getInitialProps = getInitialProps;
+
+  render() {
+    return (
+      <Html lang="en">
+        <Head>
+          <ColorSchemeScript />
+        </Head>
+        <body>
+          <Main />
+          <NextScript />
+        </body>
+      </Html>
+    );
+  }
+}
+
+// function MyDocument extends Document() {
+//   return (
+//     <Html lang="en">
+//       <Head>
+//         <ColorSchemeScript />
+//       </Head>
+//       <body>
+//         <Main />
+//         <NextScript />
+//       </body>
+//     </Html>
+//   );
+// }
+
+// Document.getInitialProps = createGetInitialProps(NextDocument, stylesServer);
+
+export default install(_Document as any);

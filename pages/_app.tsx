@@ -1,4 +1,4 @@
-import install from '@twind/with-next/app';
+import install from '../lib/twind-with-next/app';
 import config from '../twind.config';
 
 import { useState } from 'react';

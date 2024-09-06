@@ -52,6 +52,7 @@ export type RegistrationFormField = {
   baseField: boolean; // whether or not this is part of the base inputs required of all registration forms
   visible: boolean; // Whether or not it displays in the app
   deleted: boolean; // Whether or not this field has been marked as "deleted" - soft delete allows for field values to still be retrievable
+  showsInSummary: boolean; // Whether or not this field is shown on the patient file
   isSearchField: boolean; // Whether or not this field can be sea
 };
 
@@ -138,6 +139,7 @@ export const baseFields: RegistrationForm['fields'] = [
     required: true,
     deleted: false,
     isSearchField: false,
+    showsInSummary: true,
   },
   {
     baseField: true,
@@ -155,6 +157,7 @@ export const baseFields: RegistrationForm['fields'] = [
     required: true,
     deleted: false,
     isSearchField: false,
+    showsInSummary: true,
   },
   {
     baseField: true,
@@ -172,6 +175,7 @@ export const baseFields: RegistrationForm['fields'] = [
     required: true,
     deleted: false,
     isSearchField: true,
+    showsInSummary: true,
   },
   {
     baseField: true,
@@ -200,6 +204,7 @@ export const baseFields: RegistrationForm['fields'] = [
     required: true,
     deleted: false,
     isSearchField: true,
+    showsInSummary: true,
   },
   {
     baseField: true,
@@ -217,6 +222,7 @@ export const baseFields: RegistrationForm['fields'] = [
     required: true,
     deleted: false,
     isSearchField: false,
+    showsInSummary: false,
   },
   {
     baseField: true,
@@ -234,6 +240,7 @@ export const baseFields: RegistrationForm['fields'] = [
     required: true,
     deleted: false,
     isSearchField: false,
+    showsInSummary: false,
   },
   {
     baseField: true,
@@ -251,6 +258,7 @@ export const baseFields: RegistrationForm['fields'] = [
     required: true,
     deleted: false,
     isSearchField: false,
+    showsInSummary: false,
   },
   {
     baseField: true,
@@ -268,6 +276,7 @@ export const baseFields: RegistrationForm['fields'] = [
     required: true,
     deleted: false,
     isSearchField: false,
+    showsInSummary: false,
   },
   {
     baseField: true,
@@ -285,6 +294,7 @@ export const baseFields: RegistrationForm['fields'] = [
     required: true,
     deleted: false,
     isSearchField: false,
+    showsInSummary: false,
   },
   {
     baseField: true,
@@ -302,6 +312,7 @@ export const baseFields: RegistrationForm['fields'] = [
     required: true,
     deleted: false,
     isSearchField: false,
+    showsInSummary: false,
   },
 ];
 
@@ -315,59 +326,60 @@ type Action =
   | { type: 'update-field-label'; payload: { translation: string; label: string; id: string } }
   | { type: 'toggle-field-required'; payload: { id: string } }
   | { type: 'toggle-field-searchable'; payload: { id: string } }
+  | { type: 'toggle-field-shows-in-summary'; payload: { id: string } }
   | {
-      type: 'toggle-visibility';
-      payload: {
-        id: string;
-      };
-    }
-  | {
-      type: 'update-field-translation';
-      payload: {
-        language: string;
-        text: string;
-      };
-    }
-  | {
-      type: 'update-field-type';
-      payload: {
-        id: string;
-        type: (typeof inputTypes)[number];
-      };
-    }
-  | {
-      type: 'add-select-option';
-      payload: { id: string };
-    }
-  | {
-      type: 'remove-select-option';
-      payload: { id: string; index: number };
-    }
-  | {
-      type: 'add-select-option-translation';
-      payload: {
-        id: string;
-        index: number;
-        language: LanguageKey;
-      };
-    }
-  | {
-      type: 'remove-select-option-translation';
-      payload: {
-        id: string;
-        index: number;
-        language: LanguageKey;
-      };
-    }
-  | {
-      type: 'update-select-option-translation';
-      payload: {
-        id: string;
-        index: number;
-        language: LanguageKey;
-        value: string;
-      };
+    type: 'toggle-visibility';
+    payload: {
+      id: string;
     };
+  }
+  | {
+    type: 'update-field-translation';
+    payload: {
+      language: string;
+      text: string;
+    };
+  }
+  | {
+    type: 'update-field-type';
+    payload: {
+      id: string;
+      type: (typeof inputTypes)[number];
+    };
+  }
+  | {
+    type: 'add-select-option';
+    payload: { id: string };
+  }
+  | {
+    type: 'remove-select-option';
+    payload: { id: string; index: number };
+  }
+  | {
+    type: 'add-select-option-translation';
+    payload: {
+      id: string;
+      index: number;
+      language: LanguageKey;
+    };
+  }
+  | {
+    type: 'remove-select-option-translation';
+    payload: {
+      id: string;
+      index: number;
+      language: LanguageKey;
+    };
+  }
+  | {
+    type: 'update-select-option-translation';
+    payload: {
+      id: string;
+      index: number;
+      language: LanguageKey;
+      value: string;
+    };
+  };
 
 function reducer(state: State, action: Action) {
   switch (action.type) {
@@ -403,6 +415,7 @@ function reducer(state: State, action: Action) {
         required: true,
         visible: true,
         deleted: false,
+        showsInSummary: false,
       };
 
       state.fields.push(newField);
@@ -595,6 +608,14 @@ function reducer(state: State, action: Action) {
       field.isSearchField = !field.isSearchField;
       break;
     }
+    case 'toggle-field-shows-in-summary': {
+      const { id } = action.payload;
+      const field = state.fields.find((f) => f.id === id);
+      if (!field) return;
+
+      field.showsInSummary = !field.showsInSummary;
+      break;
+    }
   }
 }
 
@@ -645,6 +666,8 @@ export default function PatientRegistrationForm() {
   const [loading, setLoading] = useState(false);
   const [loadingForm, setLoadingForm] = useState(true);
 
+  console.log({ state })
+
   /**
   On page load pull all the registration forms from the database, set the first one to state
   */
@@ -674,8 +697,10 @@ export default function PatientRegistrationForm() {
             options: field.options.map((opt) => mapObjectValues(opt, decodeURI)),
             column: decodeURI(field.column),
           })),
-          createdAt: form.createdAt,
-          updatedAt: form.updatedAt,
+          // @ts-ignore
+          createdAt: form.createdAt || form.created_at ? new Date(form.createdAt || form.created_at) : new Date(),
+          // @ts-ignore
+          updatedAt: form.updatedAt || form.updated_at ? new Date(form.updatedAt || form.updated_at) : new Date(),
           metadata: form.metadata,
         };
 
@@ -770,8 +795,17 @@ export default function PatientRegistrationForm() {
         {sortBy(fields, 'position')
           .filter((f) => !f.deleted)
           .map((field) => {
-            const { baseField, id, label, options, position, fieldType, required, isSearchField } =
-              field;
+            const {
+              baseField,
+              id,
+              label,
+              options,
+              position,
+              fieldType,
+              required,
+              isSearchField,
+              showsInSummary,
+            } = field;
             const isInEditMode = editField.id === id;
             return (
               <div
@@ -1043,6 +1077,13 @@ export default function PatientRegistrationForm() {
                             dispatch({ type: 'toggle-field-searchable', payload: { id } })
                           }
                           label="This field is included in advanced search"
+                        />
+                        <Checkbox
+                          checked={showsInSummary}
+                          onChange={(e) =>
+                            dispatch({ type: 'toggle-field-shows-in-summary', payload: { id } })
+                          }
+                          label="This field is visible in the patient file summary"
                         />
                       </Grid.Col>
                       <Grid.Col span={12}>

@@ -25,6 +25,7 @@ import {
   IconAdjustments,
   IconHaze,
   IconDoorExit,
+  IconBuildingHospital,
 } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import { LinksGroup } from './LinksGroup';
@@ -49,6 +50,16 @@ const navLinks = [
     links: [
       { label: 'Users List', link: '/app/users-list' },
       { label: 'New User', link: '/app/new-user' },
+    ],
+  },
+  // clinics
+  {
+    label: 'Clinics',
+    icon: IconBuildingHospital,
+    initiallyOpened: true,
+    links: [
+      { label: 'Clinics List', link: '/app/clinics-list' },
+      { label: 'New Clinic', link: '/app/new-clinic' },
     ],
   },
   { label: 'Forms', icon: IconForms, link: '/app/forms-list' },

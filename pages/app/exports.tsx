@@ -177,37 +177,6 @@ export default function ExportsPage() {
     return '';
   };
 
-  /** Given a list of patient entries in an event, and an ... */
-  // TODO
-  const patientRows = useMemo(() => {
-    /** The base fields columns */
-    const basePatientFields = [
-      'created_at',
-      'id',
-      'given_name',
-      'surname',
-      'date_of_birth',
-      'country',
-      'hometown',
-      'sex',
-      'phone',
-      'updated_at',
-    ];
-
-    /** The custom / dynamic fields that are in the additional_data column */
-    const additionalData = differenceBy(patientColumns, basePatientFields);
-
-    const data: Record<string, string> = {};
-
-    const columns = [...patientColumns, ...additionalData];
-    columns.forEach((col) => {
-      // if (=)
-      //   const value =
-    });
-  }, [patientColumns]);
-
-  console.log(filters);
-
   /** Download all the events from this specific selected form and within this date range */
   const downloadEvents = () => {
     const { startDate: startDateVal, endDate: endDateVal, id } = filters;
@@ -277,14 +246,14 @@ export default function ExportsPage() {
         />
 
         <div style={{ display: 'flex', alignContent: 'flex-end', alignSelf: 'flex-end' }}>
-          <Button onClick={handleSearch} disabled={loadingEvents}>
+          <Button onClick={handleSearch} disabled={loadingEvents} className="primary">
             {loadingEvents ? 'Loading ...' : 'Search'}
           </Button>
         </div>
       </SimpleGrid>
 
       <If show={eventResponse.length > 0}>
-        <Button onClick={downloadEvents} variant={'light'}>
+        <Button onClick={downloadEvents} className="primary">
           Download Events
         </Button>
 

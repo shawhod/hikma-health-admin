@@ -5,26 +5,11 @@ import { useRouter } from 'next/router';
 import AppLayout from '../../components/Layout';
 import { FAB } from '../../components/FAB';
 import { User } from '../../types/User';
+import { camelCaseKeys } from '../../utils/misc';
+import { useClinicsList } from '../../hooks/useClinicsList';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
-const getClinics = async (token: string): Promise<User[]> => {
-  const response = await fetch(`${HIKMA_API}/v1/admin/clinics`, {
-    method: 'GET',
-    headers: {
-      Authorization: token,
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    console.error(error);
-    return Promise.resolve([]);
-  }
-
-  const result = await response.json();
-  return result.clinics;
-};
 
 const deleteClinic = async (id: string, token: string): Promise<any> => {
   const response = await fetch(`${HIKMA_API}/v1/admin/clinics/${id}`, {
@@ -42,21 +27,7 @@ const deleteClinic = async (id: string, token: string): Promise<any> => {
 
 export default function UsersList() {
   const router = useRouter();
-  const [clinics, setClinics] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      getClinics(token)
-        .then((clinics) => {
-          console.log({ clinics });
-          setClinics(clinics);
-          setLoading(false);
-        })
-        .catch((err) => console.log(err));
-    }
-  }, []);
+  const { clinics, loading, refresh } = useClinicsList();
 
   const openRegisterClinicForm = () => {
     router.push('/app/new-clinic');
@@ -69,9 +40,7 @@ export default function UsersList() {
       deleteClinic(id, token)
         .then((res) => {
           console.log(res);
-          // remove user from state
-          const newClinics = clinics.filter((clinic) => clinic.id !== id);
-          setClinics(newClinics);
+          refresh();
         })
         .catch((err) => console.log(err));
     }

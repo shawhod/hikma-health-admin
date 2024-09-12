@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ActionIcon, Button, Loader, Table } from '@mantine/core';
+import { ActionIcon, Box, Button, Loader, rem, Table, TextInput } from '@mantine/core';
 import AppLayout from '../../../components/Layout';
 import { Patient } from '../../../types/Patient';
 import { differenceBy, isEqual, isEqualWith, replace } from 'lodash';
@@ -13,9 +13,10 @@ import {
 } from './registration-form';
 import axios from 'axios';
 import { mapObjectValues } from '../../../utils/misc';
-import { IconPlus } from '@tabler/icons-react';
+import { IconArrowRight, IconPlus, IconSearch, IconX } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import { usePatientRegistrationForm } from '../../../hooks/usePatientRegistrationForm';
+import { notifications } from '@mantine/notifications';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
@@ -59,6 +60,14 @@ export default function PatientsList() {
   const [columns, setColumns] = useState<string[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [searchCounter, setSearchCounter] = useState<number>(0); // used to re-fetch patients when search is reset
+  const [searchState, setSearchState] = useState<{
+    isSearching: boolean;
+    showingResults: boolean;
+  }>({
+    isSearching: false,
+    showingResults: false,
+  });
   const router = useRouter();
 
   const { form: patientRegistrationForm } = usePatientRegistrationForm();
@@ -78,7 +87,7 @@ export default function PatientsList() {
         console.error(error);
         setLoading(false);
       });
-  }, []);
+  }, [searchCounter]);
 
   console.log({ patientRegistrationForm });
 
@@ -130,7 +139,6 @@ export default function PatientsList() {
   //   'phone',
   //   'updated_at',
   // ];
-  console.log(registrationIdToField);
   const basePatientFields = baseFields
     .filter((field) => field.baseField === true)
     .map((field) => field.column);
@@ -142,6 +150,53 @@ export default function PatientsList() {
 
   const goToRegisterPatient = () => {
     router.push('/app/patients/register');
+  };
+
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // get the search query
+    const searchInput = e.currentTarget.elements.namedItem('search') as HTMLInputElement;
+    const searchQuery = searchInput.value;
+
+    const token = localStorage.getItem('token') || '';
+
+    setSearchState({ isSearching: true, showingResults: true });
+
+    axios
+      .get(`${HIKMA_API}/v1/admin/search/patients`, {
+        headers: {
+          Authorization: token,
+          'Content-Type': 'application/json',
+        },
+        params: {
+          query: searchQuery,
+        },
+      })
+      .then((res) => {
+        setPatients(res.data?.patients || []);
+      })
+      .catch((err) => {
+        console.error(err);
+        setPatients([]);
+        notifications.show({
+          title: 'Error',
+          message: 'An error occurred while searching for patients',
+          color: 'red',
+          position: 'top-right',
+        });
+      })
+      .finally(() => {
+        setSearchState({ isSearching: false, showingResults: true });
+      });
+  };
+
+  const resetSearch = () => {
+    setSearchState({ isSearching: false, showingResults: false });
+    setPatients([]);
+    // clear the search input form
+    const searchInput = document.querySelector('input[name="search"]') as HTMLInputElement;
+    searchInput.value = '';
+    setSearchCounter((prev) => prev + 1);
   };
 
   const ths = (
@@ -193,6 +248,30 @@ export default function PatientsList() {
         <Button onClick={downloadPatients} variant={'light'}>
           Download data
         </Button>
+        <Box py={'md'}>
+          <form onSubmit={handleSearch}>
+            <TextInput
+              radius="xl"
+              size="md"
+              name="search"
+              placeholder="Search patients by name"
+              rightSectionWidth={42}
+              leftSection={<IconSearch style={{ width: rem(18), height: rem(18) }} stroke={1.5} />}
+              rightSection={
+                searchState.isSearching ? (
+                  <Loader size="xs" />
+                ) : searchState.showingResults ? (
+                  <ActionIcon type="button" onClick={resetSearch} size={32} radius="xl" color={'blue'} variant="filled">
+                    <IconX style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
+                  </ActionIcon>
+                ) : (
+                  <ActionIcon type="submit" size={32} radius="xl" color={'blue'} variant="filled">
+                    <IconArrowRight style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
+                  </ActionIcon>
+                )}
+            />
+          </form>
+        </Box>
         <Table.ScrollContainer minWidth={500}>
           <Table
             horizontalSpacing={'md'}
@@ -216,6 +295,7 @@ export default function PatientsList() {
         }}
         onClick={goToRegisterPatient}
         variant="filled"
+        className="primary"
         size="xl"
         radius="xl"
         aria-label="Settings"

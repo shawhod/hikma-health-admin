@@ -26,6 +26,7 @@ import {
   IconHaze,
   IconDoorExit,
   IconBuildingHospital,
+  IconUsers,
 } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import { LinksGroup } from './LinksGroup';
@@ -39,13 +40,13 @@ const navLinks = [
     initiallyOpened: true,
     links: [
       { label: 'Patients List', link: '/app/patients/list' },
-      { label: 'Registration Form', link: '/app/patients/registration-form' },
-      { label: 'Register Patient', link: '/app/patients/register' },
+      { label: 'Register New Patient', link: '/app/patients/register' },
+      { label: 'Customize Registration Form', link: '/app/patients/registration-form' },
     ],
   },
   {
     label: 'Users',
-    icon: IconCalendarStats,
+    icon: IconUsers,
     initiallyOpened: true,
     links: [
       { label: 'Users List', link: '/app/users-list' },
@@ -61,6 +62,13 @@ const navLinks = [
       { label: 'Clinics List', link: '/app/clinics-list' },
       { label: 'New Clinic', link: '/app/new-clinic' },
     ],
+  },
+  // Appointments
+  {
+    label: 'Appointments',
+    icon: IconCalendarStats,
+    initiallyOpened: true,
+    links: [{ label: 'Appointments List', link: '/app/appointments/list' }],
   },
   { label: 'Forms', icon: IconForms, link: '/app/forms-list' },
   // { label: 'HERS', icon: IconHaze, link: '/app/hers' },

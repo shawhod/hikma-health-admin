@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Group, Box, Collapse, ThemeIcon, Text, UnstyledButton, rem } from '@mantine/core';
 import { createStyles } from '@mantine/emotion';
-import { IconCalendarStats, IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+import { IconCalendarStats, IconChevronDown, IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import Link from 'next/link';
+import If from './If';
 
 const useStyles = createStyles((theme, _, u) => ({
   control: {
@@ -114,7 +115,14 @@ export function LinksGroup({ icon: Icon, label, initiallyOpened, links, link }: 
               </ThemeIcon>
               <Box ml="md">{label}</Box>
             </Box>
-            {hasLinks && <ChevronIcon className={classes.chevron} size="1rem" stroke={1.5} />}
+            <If show={hasLinks}>
+              <If show={!opened}>
+                <ChevronIcon className={classes.chevron} size="1rem" stroke={1.5} />
+              </If>
+              <If show={opened}>
+                <IconChevronDown className={classes.chevron} size="1rem" stroke={1.5} />
+              </If>
+            </If>
           </Group>
         </Wrapper>
       </UnstyledButton>

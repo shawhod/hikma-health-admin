@@ -18,6 +18,7 @@ import { emotionTransform, MantineEmotionProvider } from '@mantine/emotion';
 import { emotionCache } from '../emotion/cache';
 import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
+import '@mantine/notifications/styles.css';
 
 const theme = createTheme({});
 
@@ -38,8 +39,8 @@ function App(props: AppProps & { colorScheme: MantineColorScheme }) {
         // forceColorScheme={colorScheme as any}
         stylesTransform={emotionTransform}
         defaultColorScheme="dark"
-        // withGlobalStyles
-        // withNormalizeCSS
+      // withGlobalStyles
+      // withNormalizeCSS
       >
         <Head>
           <title>Hikma Health Admin Dashboard</title>
@@ -50,7 +51,7 @@ function App(props: AppProps & { colorScheme: MantineColorScheme }) {
 
         <ColorSchemeScript
           defaultColorScheme="dark"
-          // onToggle={() => setColorScheme(colorScheme === 'light' ? 'dark' : 'light')}
+        // onToggle={() => setColorScheme(colorScheme === 'light' ? 'dark' : 'light')}
         />
         <Component {...pageProps} />
         <Notifications />

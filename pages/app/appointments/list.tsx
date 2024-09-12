@@ -166,8 +166,8 @@ export default function AppointmentsList() {
         <AppLayout title="Appointments List">
 
             <Flex dir="row" gap="md" align="flex-end">
-                <DateInput label="Start Date" value={searchFilters.startDate} onChange={(date) => setSearchFilters({ ...searchFilters, startDate: startOfDay(new Date(date)) as Date })} />
-                <DateInput label="End Date" minDate={searchFilters.startDate} value={searchFilters.endDate} onChange={(date) => setSearchFilters({ ...searchFilters, endDate: endOfDay(new Date(date)) as Date })} />
+                <DateInput label="Start Date" value={searchFilters.startDate} onChange={(date) => setSearchFilters({ ...searchFilters, startDate: startOfDay(new Date(date as Date)) as Date })} />
+                <DateInput label="End Date" minDate={searchFilters.startDate} value={searchFilters.endDate} onChange={(date) => setSearchFilters({ ...searchFilters, endDate: endOfDay(new Date(date as Date)) as Date })} />
                 <Select
                     label="Status"
                     data={appointmentStatusList.map(status => ({ value: status, label: upperFirst(status.replace('_', ' ')) }))}

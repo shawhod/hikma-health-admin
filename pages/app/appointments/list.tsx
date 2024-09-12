@@ -178,6 +178,7 @@ export default function AppointmentsList() {
                     label="Clinic"
                     data={clinics.map(clinic => ({ value: clinic.id, label: clinic.name }))}
                     value={searchFilters.clinicId}
+                    clearable
                     onChange={(value) => setSearchFilters({ ...searchFilters, clinicId: value as string })}
                 />
                 <Button onClick={handleSearch} loading={loading} className="primary">Search</Button>
@@ -205,7 +206,7 @@ export default function AppointmentsList() {
                                 <Table.Td colSpan={1}>
                                     <Select
                                         value={appointment.status}
-                                        data={["pending", "cancelled", "completed", "checked_in"].map(status => ({ value: status, label: upperFirst(status) }))}
+                                        data={["pending", "cancelled", "completed", "checked_in"].map(status => ({ value: status, label: upperFirst(status?.replace('_', ' ')) || '' }))}
                                         onChange={value => toggleAppointmentStatus(appointment.id, value as AppointmentStatus)}
                                     />
                                 </Table.Td>

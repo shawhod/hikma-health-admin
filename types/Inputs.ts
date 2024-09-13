@@ -56,13 +56,10 @@ export type MeasurementUnit =
   | 'mmHg'
   | 'cmH2O'
   | 'mmH2O'
-  | 'mmol/L'
-  | 'mg/dL'
-  | 'C'
-  | 'F'
+  | '°C'
+  | '°F'
   | 'BPM'
   | 'P'
-  | 'M'
   | 'mmol/L'
   | 'mg/dL'
   | '%'
@@ -116,17 +113,17 @@ export type BinaryField = HHFieldBase & {
 export type OptionsField = HHFieldBase &
   (
     | {
-        fieldType: 'options';
-        inputType: 'radio';
-        multi: false;
-        options: FieldOption[];
-      }
+      fieldType: 'options';
+      inputType: 'radio';
+      multi: false;
+      options: FieldOption[];
+    }
     | {
-        fieldType: 'options';
-        inputType: 'checkbox' | 'select';
-        multi: boolean;
-        options: FieldOption[];
-      }
+      fieldType: 'options';
+      inputType: 'checkbox' | 'select';
+      multi: boolean;
+      options: FieldOption[];
+    }
   );
 
 export type DiagnosisField = HHFieldBase & {
@@ -138,17 +135,17 @@ export type DiagnosisField = HHFieldBase & {
 export type TextField = HHFieldBase &
   (
     | {
-        fieldType: 'free-text';
-        inputType: 'text' | 'number' | 'email' | 'password' | 'tel';
-        length: 'short';
-        units?: DoseUnit[] | DurationUnit[];
-      }
+      fieldType: 'free-text';
+      inputType: 'text' | 'number' | 'email' | 'password' | 'tel';
+      length: 'short';
+      units?: DoseUnit[] | DurationUnit[];
+    }
     | {
-        fieldType: 'free-text';
-        inputType: 'textarea';
-        length: 'long';
-        units?: DoseUnit[] | DurationUnit[];
-      }
+      fieldType: 'free-text';
+      inputType: 'textarea';
+      length: 'long';
+      units?: DoseUnit[] | DurationUnit[];
+    }
   );
 
 export type MedicineField = HHFieldBase & {

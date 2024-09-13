@@ -12,7 +12,7 @@ import {
 } from '@mantine/core';
 import CreatableSelect from 'react-select/creatable';
 import { createStyles } from '@mantine/emotion';
-import { upperFirst, lowerCase } from 'lodash';
+import { upperFirst, lowerCase, union, uniqueId, uniq } from 'lodash';
 import { useListState } from '@mantine/hooks';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { IconGripVertical, IconTrash } from '@tabler/icons-react';
@@ -31,7 +31,7 @@ let YesNoOptions: FieldOption[] = [
   { value: 'no', label: 'No' },
 ];
 
-const measurementOptions: MeasurementUnit[] = [
+const measurementOptions: MeasurementUnit[] = uniq([
   'cm',
   'm',
   'kg',
@@ -41,18 +41,15 @@ const measurementOptions: MeasurementUnit[] = [
   'mmHg',
   'cmH2O',
   'mmH2O',
-  'mmol/L',
-  'mg/dL',
-  'C',
-  'F',
+  '°C',
+  '°F',
   'BPM',
   'P',
-  'M',
   'mmol/L',
   'mg/dL',
   '%',
   'units',
-];
+])
 
 const useStyles = createStyles((theme, _, u) => ({
   item: {

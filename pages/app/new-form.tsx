@@ -1,4 +1,4 @@
-// @ts-nochec
+// @ts-nocheck
 import React, { useState, useReducer, useEffect, useMemo } from 'react';
 import {
   Menu,

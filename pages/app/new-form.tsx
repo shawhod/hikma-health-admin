@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nochec
 import React, { useState, useReducer, useEffect, useMemo } from 'react';
 import {
   Menu,
@@ -51,12 +51,16 @@ import {
   HHFieldWithPosition,
   InputType,
   OptionsField,
+  FieldType,
+  FieldOption,
+  DoseUnit,
 } from '../../types/Inputs';
 import AppLayout from '../../components/Layout';
 import { DiagnosisSelect } from '../../components/FormBuilder/DiagnosisPicker';
 import { languageOptions } from '../../data/languages';
 import { useRouter } from 'next/router';
 import { nanoid } from 'nanoid';
+import { deduplicateOptions } from '../../utils/misc';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
@@ -426,6 +430,14 @@ export default function NewFormBuilder() {
           console.error(e);
           form_fields = [];
         }
+
+        // Any form fields that are of fieldType "options", do not allow any duplicate options
+        form_fields = form_fields.map((field: HHField) => {
+          if (field.fieldType === 'options') {
+            field.options = deduplicateOptions(field.options);
+          }
+          return field;
+        });
 
         dispatch({ type: 'set-form-state', payload: { fields: form_fields } });
         setFormDescription(description);

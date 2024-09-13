@@ -31,3 +31,24 @@ export const camelCaseKeys = <T extends Record<string, any>>(obj: T): T => {
     return acc;
   }, {}) as T;
 };
+
+
+/**
+ * Deduplicates an array of options based on their `value` field.
+ * 
+ * @param {Array<{ label: string, value: string }>} options - The array of options to deduplicate.
+ * @returns {Array<{ label: string, value: string }>} The deduplicated array of options.
+ */
+export function deduplicateOptions(options: Array<{ label: string, value: string }>): Array<{ label: string, value: string }> {
+  const seenValues = new Set<string>();
+  const deduplicatedOptions: Array<{ label: string, value: string }> = [];
+
+  for (const option of options) {
+    if (!seenValues.has(option.value)) {
+      seenValues.add(option.value);
+      deduplicatedOptions.push(option);
+    }
+  }
+
+  return deduplicatedOptions;
+}

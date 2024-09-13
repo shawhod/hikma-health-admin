@@ -702,10 +702,11 @@ const WithUnits = ({
 }) => {
   const hasUnits = field.units && field.units.length > 0;
   console.log('Has units: ', field.units);
+  const dedupUnits = deduplicateOptions(field?.units || []);
   return (
     <div className={`flex flex-row ${hasUnits ? 'space-x-4' : ''}`}>
       <div className="flex-1"> {children}</div>
-      {hasUnits && <Select label="Units" description=" " data={field.units} />}
+      {hasUnits && <Select label="Units" description=" " data={dedupUnits} />}
     </div>
   );
 };

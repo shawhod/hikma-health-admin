@@ -1,5 +1,5 @@
 // import { faker } from '@faker-js/faker';
-// import { Patient } from '../types/Patient';
+import { Patient } from '../types/Patient';
 // import { format } from 'date-fns';
 
 // /**

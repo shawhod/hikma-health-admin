@@ -775,7 +775,7 @@ export default function PatientRegistrationForm() {
 
   // const language = "en"
   return (
-    <AppLayout isLoading={loadingForm} title="Patient Registration Form">
+    <AppLayout isLoading={loadingForm} title="Customize Registration Form">
       <div className="max-w-lg space-y-4 pt-6">
         <Select
           label="Language"

@@ -1,12 +1,30 @@
 import React, { useState, useReducer, useEffect, useMemo, useRef } from 'react';
-import { Menu, Button, TextInput, NumberInput, Textarea, Select, Box } from '@mantine/core';
-import { DatePickerInput } from '@mantine/dates';
+import {
+  Menu,
+  Button,
+  TextInput,
+  NumberInput,
+  Textarea,
+  Select,
+  Box,
+  Modal,
+  Title,
+  Loader,
+  Text,
+  Flex,
+  Stack,
+} from '@mantine/core';
+import { DatePickerInput, DateTimePicker } from '@mantine/dates';
 import { v1 as uuidV1 } from 'uuid';
 import axios from 'axios';
 import AppLayout from '../../../components/Layout';
 import { usePatientRegistrationForm } from '../../../hooks/usePatientRegistrationForm';
 import { useForm } from '@mantine/form';
 import { getTranslation, RegistrationFormField } from './registration-form';
+import { useDisclosure } from '@mantine/hooks';
+import { useClinicsList } from '../../../hooks/useClinicsList';
+import If from '../../../components/If';
+import { IconCalendar, IconCircleCheck, IconUserPlus } from '@tabler/icons-react';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
@@ -51,7 +69,35 @@ export default function RegisterPatient() {
     isLoading: isLoadingForm,
     refresh: refreshForm,
   } = usePatientRegistrationForm();
+  const [opened, { open, close }] = useDisclosure(false);
+
+  // patient id is null before the patient is created, and then set to the patient id after the patient is created
+  const [patientId, setPatientId] = useState<string | null>(null);
   const [loadingSubmission, setLoadingSubmission] = useState(false);
+
+  // Register patient => show option to create appointment or register another patient => if register another patient, reset form
+  // => if create appointment, open modal to select clinic, date/time, duration, reason, and notes
+  // => create appointment, reset form
+  const [registrationState, setRegistrationState] = useState<
+    'register-patient' | 'registration-complete' | 'creating-appointment' | 'creating-appointment-complete'
+  >('register-patient');
+
+  // if the registration state is ever set to 'register-patient', reset the form and patientId then close the modal
+  useEffect(() => {
+    if (registrationState === 'register-patient') {
+      setPatientId(null);
+      form.reset();
+      form.setValues({});
+      close();
+    }
+  }, [registrationState]);
+
+  // if the form ever closes, reset the registration state to 'register-patient'
+  useEffect(() => {
+    if (opened === false) {
+      setRegistrationState('register-patient');
+    }
+  }, [opened]);
 
   const form = useForm({
     mode: 'controlled',
@@ -96,7 +142,7 @@ export default function RegisterPatient() {
         } else {
           const row: PatientAttributeRow = {
             id: uuidV1(),
-            patient_id: '', // TODO: From the server side???
+            patient_id: '',
             attribute_id: field.id,
             attribute: field.column,
             number_value: field.fieldType === 'number' ? Number(values[field.column]) : null,
@@ -130,10 +176,12 @@ export default function RegisterPatient() {
       )
       .then((res) => {
         console.log({ res });
+        setPatientId(res.data.patient_id);
+        setRegistrationState('registration-complete');
+        open();
         form.setValues({});
         form.reset();
         formRef?.current?.reset();
-        alert('New patient registered successfully.');
       })
       .catch((error) => {
         console.error(error);
@@ -149,14 +197,68 @@ export default function RegisterPatient() {
   // FIXME: handle case where the form is not created yet
   if (isLoadingForm === false && patientRegistrationForm === null) {
     return (
-      <AppLayout title="Register Patient" isLoading={isLoadingForm}>
+      <AppLayout title="Register New Patient" isLoading={isLoadingForm}>
         Please create a patient registration form first before proceeding.
       </AppLayout>
     );
   }
 
   return (
-    <AppLayout title="Register Patient" isLoading={isLoadingForm}>
+    <AppLayout title="Register New Patient" isLoading={isLoadingForm}>
+      <Modal opened={opened} onClose={close} title="Next steps" closeOnClickOutside={false}>
+        {/* Patient registration is complete. show options */}
+        <If show={registrationState === 'registration-complete'}>
+          <Flex justify="center" align="center" direction="column" gap="lg">
+            <IconCircleCheck color="green" size={100} />
+            <Title order={2}>Patient Registered</Title>
+            <Text size="sm">
+              What would you like to do next?
+            </Text>
+          </Flex>
+          <Stack my="lg" gap="lg">
+            <Button leftSection={<IconCalendar size={16} />} onClick={() => setRegistrationState('creating-appointment')} variant="outline" fullWidth>
+              Create appointment
+            </Button>
+            <Button leftSection={<IconUserPlus size={16} />} onClick={() => setRegistrationState('register-patient')} variant="outline" fullWidth>
+              Register another patient
+            </Button>
+          </Stack>
+        </If>
+
+
+        {/* Creating appointment option chosen */}
+        <If show={registrationState === 'creating-appointment'}>
+          <NewAppointmentForm
+            visitId={null}
+            patientId={patientId as string}
+            onAppointmentCreated={() => setRegistrationState('creating-appointment-complete')}
+          />
+        </If>
+
+        {/* Creating appointment is complete */}
+        <If show={registrationState === 'creating-appointment-complete'}>
+          <Flex justify="center" align="center" direction="column" gap="lg">
+            <IconCircleCheck color="green" size={100} />
+            <Title order={2}>Appointment Created</Title>
+            <Text size="sm">
+              What would you like to do next?
+            </Text>
+          </Flex>
+
+          <Stack my="lg" gap="lg">
+            <Button leftSection={<IconCalendar size={16} />} onClick={() => setRegistrationState('creating-appointment')} variant="outline" fullWidth>
+              Create another appointment
+            </Button>
+            <Button leftSection={<IconUserPlus size={16} />} onClick={() => setRegistrationState('register-patient')} variant="outline" fullWidth>
+              Register another patient
+            </Button>
+          </Stack>
+        </If>
+
+      </Modal>
+
+
+
       <form onSubmit={form.onSubmit(createPatient)} ref={formRef}>
         <Box style={{ maxWidth: 500 }} className="space-y-4">
           {patientRegistrationForm?.fields
@@ -216,4 +318,212 @@ export default function RegisterPatient() {
       </form>
     </AppLayout>
   );
+}
+
+export type AppointmentStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'checked_in';
+
+export type Appointment = {
+  id: string;
+  providerId: string | null;
+  clinicId: string;
+  patientId: string;
+  userId: string;
+  currentVisitId: string;
+  fulfilledVisitId: string | null;
+  timestamp: Date;
+  duration: number; // in minutes
+  reason: string;
+  notes: string;
+  status: AppointmentStatus;
+  metadata: Record<string, any>;
+  isDeleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+};
+
+/**
+ * Default appointment object
+ */
+const defaultAppointment: Appointment = {
+  id: '',
+  providerId: null,
+  clinicId: '',
+  patientId: '',
+  userId: '',
+  currentVisitId: '',
+  fulfilledVisitId: '',
+  timestamp: new Date(),
+  duration: 0,
+  reason: '',
+  notes: '',
+  status: 'pending',
+  metadata: {},
+  isDeleted: false,
+  deletedAt: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+type NewAppointmentFormProps = {
+  visitId: string | null;
+  patientId: string;
+  onAppointmentCreated: () => void;
+};
+
+const durationOptions = [
+  { label: 'Unknown', value: 0 },
+  { label: '15 Minutes', value: 15 },
+  { label: '30 Minutes', value: 30 },
+  { label: '45 Minutes', value: 45 },
+  { label: '1 Hour', value: 60 },
+  { label: '2 Hours', value: 60 * 2 },
+  { label: '3 Hours', value: 60 * 3 },
+  { label: '8 Hours', value: 60 * 8 },
+];
+
+const reasonOptions = [
+  { label: 'Screening', value: 'screening' },
+  { label: 'Checkup', value: 'checkup' },
+  { label: 'Follow-up', value: 'follow-up' },
+  { label: 'Counselling', value: 'counselling' },
+  { label: 'Procedure', value: 'procedure' },
+  { label: 'Investigation', value: 'investigation' },
+  { label: 'Other', value: 'other' },
+];
+
+function NewAppointmentForm({ visitId, patientId, onAppointmentCreated }: NewAppointmentFormProps) {
+  const { clinics, loading: isLoadingClinics } = useClinicsList();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const form = useForm({
+    mode: 'controlled',
+    initialValues: {
+      ...defaultAppointment,
+      duration: 0,
+      patientId,
+      visitId,
+      reason: '',
+      providerId: null,
+      notes: '',
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+
+    validate: {},
+  });
+
+  const createAppointment = async (values: any) => {
+    if (isSubmitting) return;
+    const validationError = validateAppointmentForm(values);
+    if (validationError) {
+      alert(validationError);
+      return;
+    }
+
+    const duration = parseInt(String(values.duration), 0);
+    setIsSubmitting(true);
+
+    const token = localStorage.getItem('token');
+    console.log({ token });
+
+    try {
+      const response = await axios.post(`${HIKMA_API}/v1/admin/appointments`, {
+        ...values,
+        duration,
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: String(token),
+        },
+      });
+
+      console.log({ response });
+
+      onAppointmentCreated?.();
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      alert('Failed to create appointment. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoadingClinics) {
+    return (
+      <div>
+        <Loader />
+      </div>
+    );
+  }
+
+  return (
+    <Box>
+      <Title order={3}>New Appointment</Title>
+
+      <form onSubmit={form.onSubmit(createAppointment)} className="space-y-3">
+        <DateTimePicker label="Appointment Time" {...form.getInputProps('timestamp')} />
+        <Select
+          label="Duration"
+          {...form.getInputProps('duration')}
+          data={durationOptions.map((d) => ({ label: d.label, value: d.value.toString() }))}
+        />
+        <Select
+          label="Reason"
+          {...form.getInputProps('reason')}
+          data={reasonOptions.map((r) => ({ label: r.label, value: r.value }))}
+        />
+        <Select
+          label="Clinic"
+          {...form.getInputProps('clinicId')}
+          data={clinics.map((c) => ({ label: c.name, value: c.id }))}
+        />
+        <Textarea label="Notes" {...form.getInputProps('notes')} />
+
+        <Button type="submit" loading={isSubmitting} mt="lg" mb="md" className="primary" fullWidth>
+          Create Appointment
+        </Button>
+      </form>
+    </Box>
+  );
+}
+
+/**
+ * Validates the appointment form values
+ * @param {Object} values - The form values to validate
+ * @param {string} values.patientId - The patient ID
+ * @param {string} values.clinicId - The clinic ID
+ * @param {Date} values.timestamp - The appointment timestamp
+ * @param {string|number} values.duration - The appointment duration
+ * @returns {string|null} An error message if validation fails, or null if validation passes
+ */
+function validateAppointmentForm(values: {
+  patientId: string;
+  clinicId: string;
+  timestamp: Date;
+  duration: string | number;
+}): string | null {
+  if (!values.patientId || !values.clinicId || !values.timestamp) {
+    return 'Please fill in all the required fields';
+  }
+
+  if (
+    typeof values.patientId !== 'string' ||
+    values.patientId.length <= 5 ||
+    typeof values.clinicId !== 'string' ||
+    values.clinicId.length <= 5
+  ) {
+    return 'Invalid patient ID or clinic ID';
+  }
+
+  if (!(values.timestamp instanceof Date) || isNaN(values.timestamp.getTime())) {
+    return 'Invalid appointment time';
+  }
+
+  const duration = parseInt(String(values.duration), 10);
+  if (isNaN(duration)) {
+    return 'Invalid duration';
+  }
+
+  return null;
 }

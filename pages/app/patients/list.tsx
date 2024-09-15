@@ -199,6 +199,10 @@ export default function PatientsList() {
     setSearchCounter((prev) => prev + 1);
   };
 
+  const handlePatientClicked = (patient: Patient) => () => {
+    console.log(patient);
+  };
+
   const ths = (
     <Table.Tr>
       {basePatientFields.map((col) => (
@@ -215,7 +219,7 @@ export default function PatientsList() {
   );
 
   const rows = patients.map((patient: Patient) => (
-    <Table.Tr key={patient.id}>
+    <Table.Tr style={{ cursor: 'pointer' }} onClick={handlePatientClicked(patient)} key={patient.id}>
       {basePatientFields.map((field) => (
         <Table.Td key={patient.id + field}>
           {String(patient[field as keyof Patient] || '')}

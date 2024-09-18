@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import AppLayout from '../../components/Layout';
 import { FAB } from '../../components/FAB';
 import { User } from '../../types/User';
+import { useClinicsList } from '../../hooks/useClinicsList';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
@@ -48,6 +49,7 @@ export default function UsersList() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const { clinics, loading: loadingClinics } = useClinicsList();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -64,6 +66,11 @@ export default function UsersList() {
 
   const openRegisterUserForm = () => {
     router.push('/app/new-user');
+  };
+
+  const getClinicName = (clinicId: string) => {
+    const clinic = clinics.find((clinic) => clinic.id === clinicId);
+    return clinic?.name || '';
   };
 
   const confirmDelete = (email: string) => {
@@ -84,6 +91,7 @@ export default function UsersList() {
   const ths = (
     <Table.Tr>
       <Table.Th>Username</Table.Th>
+      <Table.Th>Clinic</Table.Th>
       <Table.Th>Role</Table.Th>
       <Table.Th>Email</Table.Th>
       <Table.Th>Actions</Table.Th>
@@ -99,6 +107,7 @@ export default function UsersList() {
   const rows = users.map((user) => (
     <Table.Tr key={user.id}>
       <Table.Td>{user.name}</Table.Td>
+      <Table.Td>{getClinicName(user.clinic_id)}</Table.Td>
       <Table.Td>{user.role}</Table.Td>
       <Table.Td>{user.email}</Table.Td>
       <Table.Td>
@@ -115,7 +124,7 @@ export default function UsersList() {
   ));
   return (
     <>
-      <AppLayout title="Users List">
+      <AppLayout title="Users List" isLoading={loadingClinics}>
         <div>
           <Table striped highlightOnHover>
             <Table.Thead>{ths}</Table.Thead>

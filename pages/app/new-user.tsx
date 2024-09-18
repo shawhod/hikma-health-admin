@@ -38,7 +38,7 @@ export default function NewUser() {
   const [user, setUser] = useState<User & { password: string }>({
     id: '',
     name: '',
-    role: 'Admin',
+    role: 'admin',
     email: '',
     clinic_id: '',
     password: '',

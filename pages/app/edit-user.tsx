@@ -5,6 +5,8 @@ import { TextInput, Select, Button } from '@mantine/core';
 import AppLayout from '../../components/Layout';
 import { User } from '../../types/User';
 import { userRoles } from './new-user';
+import axios from 'axios';
+import { useClinicsList } from '../../hooks/useClinicsList';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
@@ -28,6 +30,7 @@ export default function EditUser() {
   const [user, setUser] = useState<User>({
     ...JSON.parse(userProps as string),
   });
+  const { clinics, loading: loadingClinics } = useClinicsList();
   const [password, setPassword] = useState('');
 
   const [loading, setLoading] = useState(false);
@@ -68,13 +71,41 @@ export default function EditUser() {
   const confirmSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (window.confirm('Are you sure you want to update this user?')) {
-      // submit();
-      window.alert('Method not implemented yet');
+      setLoading(true);
+      const token = localStorage.getItem('token') || '';
+      // calling: /users/<uid>/manage
+      axios
+        .put(
+          `${HIKMA_API}/v1/admin/users/${user.id}/manage`,
+          {
+            name: user.name.trim(),
+            role: user.role.trim(),
+            email: user.email.trim().toLowerCase(),
+            clinic_id: user.clinic_id,
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: token,
+            },
+          }
+        )
+        .then((response) => {
+          console.log(response.data);
+          setLoading(false);
+          alert('User updated successfully.');
+          router.push('/app/users-list');
+        })
+        .catch((error) => {
+          console.error('Error updating user:', error);
+          setLoading(false);
+          alert('Error updating user. Please try again.');
+        });
     }
   };
 
   return (
-    <AppLayout title="Edit User">
+    <AppLayout title="Edit User" isLoading={loadingClinics}>
       <form onSubmit={confirmSubmit}>
         <div className="max-w-md space-y-4">
           <TextInput
@@ -86,11 +117,25 @@ export default function EditUser() {
           />
           <Select
             label="User Role"
+            required
             value={user.role}
             placeholder="Pick one"
             onChange={(value) => setUser({ ...user, role: value || '' })}
             data={userRoles.map((role) => ({ label: upperFirst(role), value: role }))}
           />
+
+          <Select
+            label="Clinic"
+            placeholder="Select one"
+            required
+            value={user.clinic_id}
+            onChange={(value) => setUser({ ...user, clinic_id: value || '' })}
+            data={clinics.map((clinic) => ({
+              value: clinic.id,
+              label: upperFirst(clinic.name),
+            }))}
+          />
+
           <TextInput
             label="Email"
             value={user.email}

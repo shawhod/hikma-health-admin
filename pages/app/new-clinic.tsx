@@ -15,11 +15,42 @@ type Clinic = {
   name: string;
 };
 
-
+/**
+ * Update clinic
+ * @param id
+ * @param token
+ * @param name
+ * @returns
+ */
+const updateClinic = async (id: string, token: string, name: string): Promise<any> => {
+  try {
+    const response = await axios.put(
+      `${HIKMA_API}/v1/admin/clinics/${id}`,
+      {
+        id,
+        name,
+      },
+      {
+        headers: {
+          Authorization: token,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      return Promise.reject(error.response.data);
+    }
+    return Promise.reject(error);
+  }
+};
 
 export default function RegisterClinic() {
   const router = useRouter();
+  const { id } = router.query;
   const [loadingSubmission, setLoadingSubmission] = useState(false);
+  const [isLoadingClinic, setIsLoadingClinic] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
 
   const form = useForm<Clinic>({
     mode: 'controlled',
@@ -29,34 +60,71 @@ export default function RegisterClinic() {
     },
 
     validate: {
-      name: (value) => value.length < 3,
+      name: (value) => (value.trim().length < 3 ? 'Name must be at least 3 characters long' : null),
     },
   });
 
-  const formRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (id) {
+      setIsEditing(true);
+      // Fetch clinic data and populate form
+      fetchClinicData(id as string);
+    }
+  }, [id]);
 
-  const createClinic = async (values: Clinic) => {
+  const fetchClinicData = async (clinicId: string) => {
     try {
-      setLoadingSubmission(true);
-      const response = await axios.post(`${HIKMA_API}/v1/admin/clinics`, values, {
+      setIsLoadingClinic(true);
+      const response = await axios.get(`${HIKMA_API}/v1/admin/clinics/${clinicId}`, {
         headers: {
-          'Content-Type': 'application/json',
           Authorization: String(localStorage.getItem('token')),
         },
       });
+
+      if (response.data && response.data.clinic) {
+        form.setValues(response.data.clinic);
+      } else {
+        alert('Clinic not found');
+        router.back();
+      }
+    } catch (error) {
+      console.error('Error fetching clinic data:', error);
+      alert('Error fetching clinic data');
+      router.back();
+    } finally {
+      setIsLoadingClinic(false);
+    }
+  };
+
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const handleSubmit = async (values: Clinic) => {
+    try {
+      setLoadingSubmission(true);
+      if (isEditing) {
+        await updateClinic(values.id, String(localStorage.getItem('token')), values.name.trim());
+        alert('Clinic updated successfully');
+      } else {
+        await axios.post(`${HIKMA_API}/v1/admin/clinics`, values, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: String(localStorage.getItem('token')),
+          },
+        });
+        alert('Clinic created successfully');
+      }
       setLoadingSubmission(false);
-      alert('Clinic created successfully');
       router.push('/app/clinics-list');
     } catch (error) {
-      console.log(error);
-      alert('Error creating clinic');
+      console.error(error);
+      alert(`Error ${isEditing ? 'updating' : 'creating'} clinic`);
       setLoadingSubmission(false);
     }
   };
 
   return (
-    <AppLayout title="Register Clinic">
-      <form onSubmit={form.onSubmit(createClinic)} ref={formRef}>
+    <AppLayout title="Register Clinic" isLoading={isLoadingClinic}>
+      <form onSubmit={form.onSubmit(handleSubmit)} ref={formRef}>
         <Box style={{ maxWidth: 500 }} className="space-y-4">
           <TextInput label="Name" {...form.getInputProps('name')} />
 

@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Loader, ActionIcon, Table } from '@mantine/core';
+import { Loader, ActionIcon, Table, Button } from '@mantine/core';
 import { IconTrash, IconEdit, IconPlus } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import AppLayout from '../../components/Layout';
 import { FAB } from '../../components/FAB';
 import { User } from '../../types/User';
 import { camelCaseKeys } from '../../utils/misc';
-import { useClinicsList } from '../../hooks/useClinicsList';
+import { Clinic, useClinicsList } from '../../hooks/useClinicsList';
+import axios from 'axios';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
-
 
 const deleteClinic = async (id: string, token: string): Promise<any> => {
   const response = await fetch(`${HIKMA_API}/v1/admin/clinics/${id}`, {
@@ -54,24 +54,32 @@ export default function UsersList() {
     </Table.Tr>
   );
 
-  const editClinic = (clinic: User) =>
+  const editClinic = (clinic: Clinic) =>
     router.push({
-      pathname: `/app/edit-clinic`,
-      query: { clinic: JSON.stringify(clinic) },
+      pathname: `/app/new-clinic`,
+      query: { id: clinic.id },
     });
+
+  // /app/new-clinic
+  // app/new-clinic
 
   const rows = clinics.map((clinic) => (
     <Table.Tr key={clinic.id}>
       <Table.Td>{clinic.id}</Table.Td>
       <Table.Td>{clinic.name}</Table.Td>
       <Table.Td>
-        <div className="flex space-x-4">
-          <ActionIcon variant="transparent" onClick={() => confirmDelete(clinic.id)}>
+        <div className="flex gap-4">
+          {/* Clinic deletion is disabled for now */}
+          {/* <ActionIcon variant="transparent" onClick={() => confirmDelete(clinic.id)}>
             <IconTrash size="1rem" color="red" />
-          </ActionIcon>
-          {/* <ActionIcon variant="transparent" onClick={() => editClinic(clinic)}>
-            <IconEdit size="1rem" color="blue" />
           </ActionIcon> */}
+          <Button
+            leftSection={<IconEdit size="1rem" />}
+            variant="transparent"
+            onClick={() => editClinic(clinic)}
+          >
+            Edit
+          </Button>
         </div>
       </Table.Td>
     </Table.Tr>

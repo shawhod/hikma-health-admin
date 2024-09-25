@@ -148,9 +148,13 @@ export type TextField = HHFieldBase &
     }
   );
 
+
+export type MedicineFieldOptions = string[] | FieldOption[];
+
 export type MedicineField = HHFieldBase & {
   fieldType: 'medicine';
   inputType: 'input-group';
+  options: MedicineFieldOptions;
   fields: {
     name: TextField;
     route: MedicineRoute;

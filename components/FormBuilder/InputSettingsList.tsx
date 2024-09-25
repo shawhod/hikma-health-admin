@@ -9,6 +9,7 @@ import {
   MultiSelect,
   useMantineColorScheme,
   Box,
+  Textarea,
 } from '@mantine/core';
 import CreatableSelect from 'react-select/creatable';
 import { createStyles } from '@mantine/emotion';
@@ -25,6 +26,7 @@ import {
   DoseUnit,
 } from '../../types/Inputs';
 import { listToFieldOptions } from '../../utils/form-builder';
+import If from '../If';
 
 let YesNoOptions: FieldOption[] = [
   { value: 'yes', label: 'Yes' },
@@ -49,7 +51,7 @@ const measurementOptions: MeasurementUnit[] = uniq([
   'mg/dL',
   '%',
   'units',
-])
+]);
 
 const useStyles = createStyles((theme, _, u) => ({
   item: {
@@ -155,10 +157,34 @@ export function InputSettingsList({
               Type: {item.inputType}
             </Text>
 
-            {['select', 'dropdown', 'checkbox', 'radio'].includes(item.inputType) &&
-              item.fieldType !== 'diagnosis' && (
-                <Box py={4}>
-                  {/*<MultiSelect
+            {/* IF the field type is medicine, then show the textarea for medication options the doctor can choose from. This is optional. */}
+            <If show={item.fieldType === 'medicine'}>
+              <Textarea
+                rows={4}
+                defaultValue={item.options?.join('; ') || ' '}
+                onChange={(e) =>
+                  onFieldOptionChange(
+                    item.id,
+                    e.currentTarget.value
+                      .split(';')
+                      .map((opt) => opt.trim())
+                      .filter((option) => option.trim() !== '')
+                  )
+                }
+                label="Medication options, separated by semicolon (;)"
+                placeholder="Enter the options - Leave empty if not applicable"
+              />
+            </If>
+
+            {/* IF the field type is a select, dropdown, checkbox, or radio, then show the options input */}
+            <If
+              show={
+                ['select', 'dropdown', 'checkbox', 'radio'].includes(item.inputType) &&
+                item.fieldType !== 'diagnosis'
+              }
+            >
+              <Box py={4}>
+                {/*<MultiSelect
                     label="Add options"
                     data={fieldOptionsUnion(YesNoOptions, item.options || [])}
                     placeholder="Select items"
@@ -180,26 +206,26 @@ export function InputSettingsList({
                     }}
                   />
                   */}
-                  <Text size="sm">Add Options</Text>
-                  <CreatableSelect
-                    value={item.options}
-                    isMulti
-                    isSearchable
-                    onChange={(newValue, _) => onFieldOptionChange(item.id, newValue)}
-                    name="colors"
-                    options={fieldOptionsUnion(YesNoOptions, item.options || [])}
-                    className={
-                      colorScheme === 'light' ? 'light-select-container' : 'dark-select-container'
-                    }
-                    // styles={{
-                    // input: {
-                    // background: "red"
-                    // }
-                    // }}
-                    classNamePrefix={colorScheme === 'light' ? 'light-select' : 'dark-select'}
-                  />
-                </Box>
-              )}
+                <Text size="sm">Add Options</Text>
+                <CreatableSelect
+                  value={item.options}
+                  isMulti
+                  isSearchable
+                  onChange={(newValue, _) => onFieldOptionChange(item.id, newValue)}
+                  name="colors"
+                  options={fieldOptionsUnion(YesNoOptions, item.options || [])}
+                  className={
+                    colorScheme === 'light' ? 'light-select-container' : 'dark-select-container'
+                  }
+                  // styles={{
+                  // input: {
+                  // background: "red"
+                  // }
+                  // }}
+                  classNamePrefix={colorScheme === 'light' ? 'light-select' : 'dark-select'}
+                />
+              </Box>
+            </If>
 
             {item.inputType === 'number' && (
               <Checkbox

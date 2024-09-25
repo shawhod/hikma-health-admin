@@ -118,6 +118,7 @@ function createMedicineField(
     inputType,
     required: true,
     fieldType: 'medicine',
+    options,
     fields: {
       name: createTextField('Name', 'Name of the medicine'),
       route: createOptionsField('Route', 'Route of the medicine', 'dropdown', [

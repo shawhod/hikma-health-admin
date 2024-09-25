@@ -69,6 +69,9 @@ export default function RegisterClinic() {
       setIsEditing(true);
       // Fetch clinic data and populate form
       fetchClinicData(id as string);
+    } else {
+      setIsEditing(false);
+      setIsLoadingClinic(false);
     }
   }, [id]);
 

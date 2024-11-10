@@ -27,6 +27,7 @@ import {
   IconDoorExit,
   IconBuildingHospital,
   IconUsers,
+  IconFileReport,
 } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import { LinksGroup } from './LinksGroup';
@@ -73,6 +74,7 @@ const navLinks = [
   { label: 'Forms', icon: IconForms, link: '/app/forms-list' },
   // { label: 'HERS', icon: IconHaze, link: '/app/hers' },
   { label: 'Activate App', icon: IconHaze, link: '/app/app-register-code' },
+  // { label: 'Reports (Beta)', icon: IconFileReport, link: '/app/reports' },
   // { label: 'Settings', icon: IconAdjustments, link: '/app/settings' },
   { label: 'Raw Data / Export Events', icon: IconAdjustments, link: '/app/exports' },
 ];

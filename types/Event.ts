@@ -1,3 +1,6 @@
+import { ICD11Diagnosis, InputType, Medication } from './misc';
+import { Patient } from './Patient';
+
 export const eventTypes = [
   'Patient Summary',
   'Camp',
@@ -31,4 +34,46 @@ export type Event = {
   isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
+};
+
+export type EventRow = {
+  columns: string[]; // a list of the column names (human readble prefferable)
+  values: Array<string | boolean | Date | number>; // (list of the values)
+};
+
+export type MultipleEventRows = {
+  columns: string[];
+  values: Array<Record<string, string | number | Date>>;
+};
+
+type FormDataEntry = {
+  fieldId: string;
+  fieldType: string; // TODO: convert to correct type
+  inputType: InputType;
+  name: string;
+  value: string | number | ICD11Diagnosis[] | Medication[];
+};
+
+export type EventResponse = {
+  formId: string;
+  eventType: string;
+  formData: FormDataEntry[];
+  isDeleted: boolean;
+  patientId: string;
+  visitId: string;
+  patient: Patient & {
+    additional_attributes: {
+      [uuid: string]: {
+        attribute: string;
+        boolean_value: null | boolean | string;
+        date_value: null | Date | string;
+        number_value: null | number | string;
+        string_value: null | string;
+      };
+    };
+    additional_data: Record<string, any>;
+    metadata: Record<string, any>;
+    [key: string]: any;
+  };
+  [key: string]: any;
 };

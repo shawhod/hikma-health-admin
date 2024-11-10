@@ -8,7 +8,7 @@ export type Patient = {
   sex: string;
   phone: string;
   camp: string;
-  additional_data: Record<string, string>[]
+  additional_data: Record<string, string>[];
   createdAt: Date;
   updatedAt: Date;
 
@@ -17,4 +17,29 @@ export type Patient = {
   date_of_birth: string;
   created_at: string;
   updated_at: string;
+};
+
+export type PatientRow = {
+  columns: string[]; // a list of the column names (human readble prefferable)
+  values: Array<string | boolean | Date | number>; // (list of the values)
+};
+
+export type MultiplePatientRows = {
+  columns: string[];
+  values: Array<Record<string, string | number | Date>>;
+};
+
+export type PatientRes = {
+  additional_attributes: {
+    [uuid: string]: {
+      attribute: string;
+      boolean_value: null | boolean | string;
+      date_value: null | Date | string;
+      number_value: null | number | string;
+      string_value: null | string;
+    };
+  };
+  additional_data: Record<string, any>;
+  metadata: Record<string, any>;
+  [key: string]: any;
 };

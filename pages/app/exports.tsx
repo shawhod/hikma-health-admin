@@ -4,36 +4,18 @@ import { endOfDay, format, isValid, startOfDay, subDays } from 'date-fns';
 import AppLayout from '../../components/Layout';
 import { Patient } from '../../types/Patient';
 import { getAllPatients, getPatientColumns } from './patients/list';
-import { Event } from '../../types/Event';
+import { Event, EventResponse, MultipleEventRows } from '../../types/Event';
 import { getAllForms } from './forms-list';
 import { HHForm } from '../../types/Inputs';
 import { DatePickerInput } from '@mantine/dates';
 import { useImmer } from 'use-immer';
 import If from '../../components/If';
-import { differenceBy, upperFirst } from 'lodash';
+import { differenceBy, replace, upperFirst } from 'lodash';
+import { formatEventsIntoRows } from '../../utils/event';
+import { usePatientRegistrationForm } from '../../hooks/usePatientRegistrationForm';
+import { getTranslation } from './patients/registration-form';
+import { orderedList } from '../../utils/misc';
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
-
-type ICD11Diagnosis = {
-  code: string;
-  desc: string;
-  desc_ar: string;
-};
-
-type Medication = {};
-
-type InputType = 'number' | 'checkbox' | 'radio' | 'select' | 'diagnosis' | 'medicine';
-type EventResponse = {
-  eventType: string;
-  formId: string;
-  formData: {
-    fieldId: string;
-    fieldType: string;
-    inputType: InputType;
-    name: string;
-    value: string | number | ICD11Diagnosis[] | Medication[];
-  }[];
-  patient: Patient;
-};
 
 export default function ExportsPage() {
   const [isDownloading, setIsDownloading] = useState(false);
@@ -46,6 +28,8 @@ export default function ExportsPage() {
     startDate: startOfDay(new Date()),
     endDate: endOfDay(new Date()),
   });
+
+  const { form: patientRegistrationForm } = usePatientRegistrationForm();
 
   // Patient events are stored as JSON inside the metadata field,
   // since the structure is unknown at present, this method needs careful consideration.
@@ -97,21 +81,18 @@ export default function ExportsPage() {
       const events = (await response.json()).events;
 
       const evResponse = events as EventResponse[];
-      console.log({ evResponse });
       setEventResponse(evResponse || []);
     } catch (error) {
       alert('An error occured searching for these events. Please try again.');
     } finally {
       setLoadingEvents(false);
     }
-
-    // console.log(events)
   };
 
   const eventColumns = useMemo(() => {
     const cols = new Set();
     eventResponse.map((ev) => {
-      ev.formData.forEach((ex) => cols.add(ex.name));
+      ev.formData?.forEach((ex) => cols.add(ex.name));
     });
     return Array.from(cols) as string[];
   }, [eventResponse]);
@@ -177,6 +158,35 @@ export default function ExportsPage() {
     return '';
   };
 
+  // deleted fields in the registration form (we will filter these out from the display)
+  const [deletedFieldIds, deletedFieldColumn] = useMemo(() => {
+    let fields = patientRegistrationForm?.fields.filter((f) => f.deleted) || [];
+    return [fields.map((f) => f.id), fields.map((f) => f.column)];
+  }, [patientRegistrationForm]);
+
+  /* mapping of columns to their current label */
+  const registrationColToField: Record<string, any> = useMemo(() => {
+    if (patientRegistrationForm === null) return {};
+    const { fields } = patientRegistrationForm;
+    return fields.reduce(
+      (prev, curr) => {
+        const key = curr.column;
+        prev[key] = getTranslation(curr.label, 'en') || curr.column || '';
+        return prev;
+      },
+      {} as Record<string, any>
+    );
+  }, [patientRegistrationForm]);
+
+  const { columnIds, eventRows }: { columnIds: string[]; eventRows: MultipleEventRows['values'] } =
+    useMemo(() => {
+      const { columns, values } = formatEventsIntoRows(eventResponse as any, deletedFieldIds);
+      return {
+        columnIds: orderedList(columns, ['id', 'given_name', 'surname', 'date_of_birth']),
+        eventRows: values,
+      };
+    }, [eventResponse.length]);
+
   /** Download all the events from this specific selected form and within this date range */
   const downloadEvents = () => {
     const { startDate: startDateVal, endDate: endDateVal, id } = filters;
@@ -187,6 +197,24 @@ export default function ExportsPage() {
 
     tableToCSV(fileName);
   };
+
+  const [columnNames, columnNameIds] = useMemo(() => {
+    let names: string[] = [];
+    let ids: string[] = [];
+    columnIds.forEach((id) => {
+      const isPatientColumn = id.startsWith('Patient ') && !id.startsWith('Patient Patient');
+      ids.push(id);
+      if (!isPatientColumn) {
+        names.push(id);
+        return;
+      }
+      const ogName = id.startsWith('Patient ') ? id.replace('Patient ', '') : id;
+      const colName = registrationColToField[ogName] || ogName;
+      names.push(colName ? 'Patient ' + colName : '');
+    });
+
+    return [names, ids];
+  }, [columnIds]);
 
   return (
     <AppLayout title="Exports">
@@ -261,43 +289,21 @@ export default function ExportsPage() {
           <Table withRowBorders striped horizontalSpacing={'sm'}>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Date</Table.Th>
-                {patientColumns.map((ptCol) => (
-                  <Table.Th style={{ minWidth: 150 }} key={ptCol}>
-                    Patient {upperFirst(ptCol.replace(new RegExp('_', 'g'), ' '))}
-                  </Table.Th>
-                ))}
-
-                {eventColumns.map((ev) => (
-                  <Table.Th style={{ minWidth: 150 }} key={ev}>
-                    {ev}
-                  </Table.Th>
-                ))}
+                {columnNames.map((name) => {
+                  return (
+                    <Table.Th style={{ minWidth: 150 }} key={name}>
+                      {name}
+                    </Table.Th>
+                  );
+                })}
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {eventResponse.map((ev, idx) => {
+              {eventRows.map((row, idx) => {
                 return (
-                  <Table.Tr key={idx}>
-                    {/*@ts-ignore */}
-                    <td>{format(ev.createdAt, 'yyyy/MM/dd')}</td>
-                    {patientColumns.map((patCol) => {
-                      console.log(
-                        ev.patient.additional_data,
-                        patCol,
-                        ev.patient.additional_data[encodeURIComponent(patCol) as any]
-                      );
-                      // @ts-ignore
-                      const value: any =
-                        // @ts-ignore
-                        ev?.patient?.[patCol as any] ||
-                        ev?.patient?.additional_data?.[patCol as any] ||
-                        ev?.patient?.additional_data?.[encodeURIComponent(patCol) as any] ||
-                        '';
-                      return <td key={patCol}>{value}</td>;
-                    })}
-                    {eventColumns.map((evC, idx) => (
-                      <Table.Td key={idx}>{getFormDataItem(ev.formData, evC)}</Table.Td>
+                  <Table.Tr key={`event_${idx}`}>
+                    {columnNameIds.map((id) => (
+                      <Table.Td key={id}>{String(row[id])}</Table.Td>
                     ))}
                   </Table.Tr>
                 );
@@ -306,44 +312,6 @@ export default function ExportsPage() {
           </Table>
         </div>
       </If>
-
-      {/**
-      <table id="patientsList" className='table-auto invisible'>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Given Name</th>
-            <th>Surname</th>
-            <th>Date of Birth</th>
-            <th>Country</th>
-            <th>Hometown</th>
-            <th>Sex</th>
-            <th>Phone</th>
-            <th>Camp</th>
-            <th>Created At</th>
-            <th>Updated At</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {patientsList.map((patient) => (
-            <tr key={patient.id}>
-              <td>{patient.id}</td>
-              <td>{patient.given_name}</td>
-              <td>{patient.surname}</td>
-              <td>{patient.date_of_birth}</td>
-              <td>{patient.country}</td>
-              <td>{patient.hometown}</td>
-              <td>{patient.sex}</td>
-              <td>{patient.phone}</td>
-              <td>{patient.camp}</td>
-              <td>{patient.created_at}</td>
-              <td>{patient.updated_at}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-*/}
     </AppLayout>
   );
 }

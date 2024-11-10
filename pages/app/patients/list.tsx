@@ -1,22 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ActionIcon, Box, Button, Loader, rem, Table, TextInput } from '@mantine/core';
 import AppLayout from '../../../components/Layout';
-import { Patient } from '../../../types/Patient';
-import { differenceBy, isEqual, isEqualWith, replace } from 'lodash';
+import { MultiplePatientRows, Patient } from '../../../types/Patient';
+import { differenceBy, replace } from 'lodash';
 import { format } from 'date-fns';
 import { tableToCSV } from '../exports';
-import {
-  baseFields,
-  getTranslation,
-  RegistrationForm,
-  translationObjectOptions,
-} from './registration-form';
+import { baseFields, getTranslation } from './registration-form';
 import axios from 'axios';
-import { mapObjectValues } from '../../../utils/misc';
 import { IconArrowRight, IconPlus, IconSearch, IconX } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import { usePatientRegistrationForm } from '../../../hooks/usePatientRegistrationForm';
 import { notifications } from '@mantine/notifications';
+import { formatPatientsIntoRows } from '../../../utils/patient';
+import { orderedList } from '../../../utils/misc';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
@@ -49,9 +45,10 @@ export function getPatientColumns(patientsList: Patient[]): string[] {
   const cols = new Set();
   patientsList.slice(0, 200).forEach((pt) => {
     const allKeys = Object.keys(pt);
-    const excluded = ['additional_data'];
+    const excluded = ['additional_data', 'additional_attributes'];
     allKeys.forEach((k) => !excluded.includes(k) && cols.add(k));
-    Object.keys(pt['additional_data']).forEach((k) => cols.add(k));
+    Object.keys(pt['additional_data'] || {}).forEach((k) => cols.add(k));
+    // Object.keys(pt['additional_attributes'] || {}).forEach((k) => cols.add(k));
   });
   return Array.from(cols) as string[];
 }
@@ -77,9 +74,9 @@ export default function PatientsList() {
     getAllPatients(token)
       .then((patientsList: Patient[]) => {
         setPatients(patientsList);
-        console.log(patientsList);
+        // console.log(patientsList);
 
-        setColumns(getPatientColumns(patientsList));
+        // setColumns(getPatientColumns(patientsList));
 
         setLoading(false);
       })
@@ -89,7 +86,28 @@ export default function PatientsList() {
       });
   }, [searchCounter]);
 
-  console.log({ patientRegistrationForm });
+  // deleted fields in the registration form (we will filter these out from the display)
+  const [deletedFieldIds, deletedFieldColumn] = useMemo(() => {
+    let fields = patientRegistrationForm?.fields.filter((f) => f.deleted) || [];
+    return [fields.map((f) => f.id), fields.map((f) => f.column)];
+  }, [patientRegistrationForm]);
+
+  console.log(
+    'patient: ',
+    formatPatientsIntoRows(patients as any, deletedFieldIds)
+    // patients.map((p) => formatPatientRow(p))
+  );
+
+  const {
+    columnIds,
+    patientRows,
+  }: { columnIds: string[]; patientRows: MultiplePatientRows['values'] } = useMemo(() => {
+    const { columns, values } = formatPatientsIntoRows(patients as any, deletedFieldIds);
+    return {
+      columnIds: orderedList(columns, ['id', 'given_name', 'surname', 'date_of_birth']),
+      patientRows: values,
+    };
+  }, [patients.length]);
 
   /* mapping of field_ids to their current label */
   const registrationIdToField: Record<string, any> = useMemo(() => {
@@ -139,14 +157,31 @@ export default function PatientsList() {
   //   'phone',
   //   'updated_at',
   // ];
+  /** Fields to ignore from the base fields */
+  const ignoreFields = [
+    'metadata',
+    'deleted_at',
+    'additional_attributes',
+    'is_deleted',
+    'last_modified',
+    'photo_url',
+    'server_created_at',
+    'image_timestamp',
+  ];
   const basePatientFields = baseFields
     .filter((field) => field.baseField === true)
     .map((field) => field.column);
   /** Add id created_at, updated_at manually to the base fields */
   basePatientFields.unshift('id', 'created_at');
   basePatientFields.push('updated_at');
+
   /** The custom / dynamic fields that are in the additional_data column */
-  const additionalData = differenceBy(columns, basePatientFields);
+  const additionalData = differenceBy(columns, basePatientFields).filter(
+    (colId) => !deletedFieldIds.includes(colId) || !ignoreFields.includes(colId)
+  );
+
+  console.log({ additionalData });
+  console.log({ columnIds, deletedFieldIds, deletedFieldColumn });
 
   const goToRegisterPatient = () => {
     router.push('/app/patients/register');
@@ -205,28 +240,59 @@ export default function PatientsList() {
 
   const ths = (
     <Table.Tr>
-      {basePatientFields.map((col) => (
+      {columnIds?.map((col) => (
         <Table.Th style={{ minWidth: 250 }} key={col}>
           {registrationColToField[col] || replace(col || '', '_', ' ')}
-        </Table.Th>
-      ))}
-      {additionalData.map((col) => (
-        <Table.Th style={{ minWidth: 250 }} key={col}>
-          {registrationIdToField[col] || col}
         </Table.Th>
       ))}
     </Table.Tr>
   );
 
-  const rows = patients.map((patient: Patient) => (
-    <Table.Tr style={{ cursor: 'pointer' }} onClick={handlePatientClicked(patient)} key={patient.id}>
+  // const ths = (
+  //   <Table.Tr>
+  //     {basePatientFields.map((col) => (
+  //       <Table.Th style={{ minWidth: 250 }} key={col}>
+  //         {registrationColToField[col] || replace(col || '', '_', ' ')}
+  //       </Table.Th>
+  //     ))}
+  //     {additionalData.map((col) => (
+  //       <Table.Th style={{ minWidth: 250 }} key={col}>
+  //         {registrationIdToField[col] || col}
+  //       </Table.Th>
+  //     ))}
+  //   </Table.Tr>
+  // );
+
+  const rows = patientRows.map((patient, idx) => {
+    return (
+      <Table.Tr
+        style={{ cursor: 'pointer' }}
+        // onClick={handlePatientClicked(patient)}
+        key={'patient_row_' + idx}
+      >
+        {columnIds?.map((colId) => (
+          <Table.Td key={patient.id + colId}>{String(patient[colId] || '')}</Table.Td>
+        ))}
+      </Table.Tr>
+    );
+  });
+
+  const rows2 = patients.map((patient: Patient) => (
+    <Table.Tr
+      style={{ cursor: 'pointer' }}
+      onClick={handlePatientClicked(patient)}
+      key={patient.id}
+    >
+      {/*
       {basePatientFields.map((field) => (
         <Table.Td key={patient.id + field}>
           {String(patient[field as keyof Patient] || '')}
         </Table.Td>
       ))}
       {additionalData.map((col) => (
-        <Table.Td key={col}>{String(patient.additional_data[col as any] || '')}</Table.Td>
+        <Table.Td key={col}>
+          {String(patient.additional_data[col as any] || patient[col as keyof Patient] || '')}
+        </Table.Td>
       ))}
       {/*
       <td>{format(patient.created_at, 'dd MMM yyyy')}</td>
@@ -265,14 +331,22 @@ export default function PatientsList() {
                 searchState.isSearching ? (
                   <Loader size="xs" />
                 ) : searchState.showingResults ? (
-                  <ActionIcon type="button" onClick={resetSearch} size={32} radius="xl" color={'blue'} variant="filled">
+                  <ActionIcon
+                    type="button"
+                    onClick={resetSearch}
+                    size={32}
+                    radius="xl"
+                    color={'blue'}
+                    variant="filled"
+                  >
                     <IconX style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
                   </ActionIcon>
                 ) : (
                   <ActionIcon type="submit" size={32} radius="xl" color={'blue'} variant="filled">
                     <IconArrowRight style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
                   </ActionIcon>
-                )}
+                )
+              }
             />
           </form>
         </Box>

@@ -110,8 +110,8 @@ export default function Reports() {
         <Group mb={5}>
           <Button onClick={togglePatients}>Open Patients</Button>
         </Group>
-        <pre>{JSON.stringify(calculateAgeHistogram(patients), null, 2)}</pre>
-        <pre>{JSON.stringify(tallyPatientsBySex(patients), null, 2)}</pre>
+        <pre>{JSON.stringify(calculateAgeHistogram(patients as any), null, 2)}</pre>
+        <pre>{JSON.stringify(tallyPatientsBySex(patients as any), null, 2)}</pre>
         <Collapse in={openedPatients}>
           <pre>{JSON.stringify(patients, null, 2)}</pre>
         </Collapse>
@@ -133,7 +133,7 @@ export default function Reports() {
           <Button onClick={toggleDiagnosesCounts}>Open Diagnoses Counts</Button>
         </Group>
         <Collapse in={openedDiagnosesCounts}>
-          <pre>{JSON.stringify(sortDiagnosesCounts(diagnosesCounts), null, 2)}</pre>
+          <pre>{JSON.stringify(sortDiagnosesCounts(diagnosesCounts as any), null, 2)}</pre>
         </Collapse>
       </Box>
 
@@ -144,7 +144,7 @@ export default function Reports() {
         </Group>
 
         <Collapse in={openedPrescriptionsCounts}>
-          <pre>{JSON.stringify(tallyPrescriptions(prescriptionsCounts), null, 2)}</pre>
+          <pre>{JSON.stringify(tallyPrescriptions(prescriptionsCounts as any), null, 2)}</pre>
         </Collapse>
       </Box>
     </AppLayout>

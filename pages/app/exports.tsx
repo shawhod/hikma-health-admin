@@ -1,4 +1,4 @@
-import { Text, Button, Paper, SimpleGrid, Select, Table } from '@mantine/core';
+import { Text, Button, Paper, SimpleGrid, Select, Table, FileInput } from '@mantine/core';
 import React, { useEffect, useMemo, useState } from 'react';
 import { endOfDay, format, isValid, startOfDay, subDays } from 'date-fns';
 import AppLayout from '../../components/Layout';
@@ -216,6 +216,99 @@ export default function ExportsPage() {
     return [names, ids];
   }, [columnIds]);
 
+  /*
+  Get all the data from the database
+  python backend returns:
+  return jsonify({
+                    "exported_at": datetime.now(timezone.utc).isoformat(),
+                    "schema_version": "1.0",
+                    "data": data
+                })
+    where data is a record of {
+    [table_name]: [list of rows]
+    }
+  */
+  const getAllData = async () => {
+    if (
+      !window.confirm(
+        'This will overwrite the current data in the database, and could take a while. Are you sure?'
+      )
+    ) {
+      return;
+    }
+    const token = localStorage.getItem('token') || '';
+    const response = await fetch(`${HIKMA_API}/v1/admin/database/export`, {
+      // const response = await fetch(`${HIKMA_API}/admin_api/database/export`, {
+      method: 'GET',
+      headers: {
+        Authorization: token,
+      },
+    });
+
+    const data = await response.json();
+    console.log(data);
+
+    const jsonData = JSON.stringify(data, null, 2); // 2 spaces for indentation
+    const blob = new Blob([jsonData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = `database_export_${data.exported_at}.json`;
+    document.body.appendChild(link);
+    link.click();
+
+    // Clean up
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  /**
+   * Upload new data to the database
+   * Takes a file, makes sure it is a valid JSON file, parses it, and uploads the contents to the backend.
+   * @param {File} file
+   */
+  const uploadData = async (file: File | null) => {
+    if (!file) return;
+
+    setIsDownloading(true);
+    try {
+      // Read the file contents
+      const fileContent = await file.text();
+      let jsonData;
+
+      // Validate JSON format
+      try {
+        jsonData = JSON.parse(fileContent);
+      } catch (e) {
+        throw new Error('Invalid JSON file format');
+      }
+
+      const token = localStorage.getItem('token') || '';
+      const response = await fetch(`${HIKMA_API}/v1/admin/database/import`, {
+        // const response = await fetch(`${HIKMA_API}/admin_api/database/import`, {
+        method: 'POST',
+        headers: {
+          Authorization: token,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(jsonData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+
+      alert('Data uploaded successfully');
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert(error instanceof Error ? error.message : 'Failed to upload data');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <AppLayout title="Exports">
       <SimpleGrid
@@ -237,6 +330,12 @@ export default function ExportsPage() {
         ))}
         */}
       </SimpleGrid>
+
+      <div>
+        <Button variant="transparent" p={0} onClick={getAllData}>
+          Export entire database
+        </Button>
+      </div>
 
       <SimpleGrid cols={3} mb={20}>
         <Select
@@ -279,6 +378,18 @@ export default function ExportsPage() {
           </Button>
         </div>
       </SimpleGrid>
+
+      {/**
+       * This input can be activated to import new data
+       * Keep disabled until there is a clear plan on the implications of data importing
+       * <FileInput
+       *   label="Upload new data"
+       *   placeholder="Upload a JSON file"
+       *   accept="application/json"
+       *   disabled={isDownloading}
+       *   onChange={(file) => uploadData(file || null)}
+       * />
+       */}
 
       <If show={eventResponse.length > 0}>
         <Button onClick={downloadEvents} className="primary">

@@ -83,3 +83,31 @@ export function orderedList(list1: string[], list2: string[]): string[] {
 
   return result;
 }
+
+
+
+/**
+ * Safely parses a JSON string or returns the input if it's already of the expected type.
+ * If parsing fails or the input doesn't match the expected type, it returns the provided default value.
+ *
+ * @template T The expected type of the parsed object
+ * @param {unknown} input The input to parse or return
+ * @param {T} defaultValue The default value to return if parsing fails or type doesn't match
+ * @returns {T} The parsed object, the input if it's already of type T, or the default value
+ */
+export function safeJSONParse<T>(input: unknown, defaultValue: T): T {
+  if (typeof input === typeof defaultValue) {
+    return input as T;
+  }
+
+  if (typeof input === 'string') {
+    try {
+      const parsed = JSON.parse(input);
+      return typeof parsed === typeof defaultValue ? parsed : defaultValue;
+    } catch (error) {
+      return defaultValue;
+    }
+  }
+
+  return defaultValue;
+}

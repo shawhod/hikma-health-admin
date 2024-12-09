@@ -60,7 +60,7 @@ import { DiagnosisSelect } from '../../components/FormBuilder/DiagnosisPicker';
 import { languageOptions } from '../../data/languages';
 import { useRouter } from 'next/router';
 import { nanoid } from 'nanoid';
-import { deduplicateOptions } from '../../utils/misc';
+import { deduplicateOptions, safeJSONParse } from '../../utils/misc';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
@@ -426,7 +426,7 @@ export default function NewFormBuilder() {
         // if it is a stringified array, try to parse it, if it fails, set it to an empty array
         let form_fields = [];
         try {
-          form_fields = JSON.parse(event_form?.form_fields || '[]');
+          form_fields = safeJSONParse<HHField[]>(event_form?.form_fields, []);
         } catch (e) {
           console.error(e);
           form_fields = [];

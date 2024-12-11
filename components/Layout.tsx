@@ -28,6 +28,7 @@ import {
   IconBuildingHospital,
   IconUsers,
   IconFileReport,
+  IconMedicineSyrup,
 } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import { LinksGroup } from './LinksGroup';
@@ -70,6 +71,13 @@ const navLinks = [
     icon: IconCalendarStats,
     initiallyOpened: true,
     links: [{ label: 'Appointments List', link: '/app/appointments/list' }],
+  },
+  // Prescriptions
+  {
+    label: 'Prescriptions',
+    icon: IconMedicineSyrup,
+    initiallyOpened: true,
+    links: [{ label: 'Prescriptions List', link: '/app/prescriptions/list' }],
   },
   { label: 'Forms', icon: IconForms, link: '/app/forms-list' },
   // { label: 'HERS', icon: IconHaze, link: '/app/hers' },

@@ -111,3 +111,31 @@ export function safeJSONParse<T>(input: unknown, defaultValue: T): T {
 
   return defaultValue;
 }
+
+
+/**
+ * Attempts to parse a date from various input types.
+ * 
+ * @param {unknown} input - The input to parse as a date. Can be a Date object, string, or number.
+ * @param {Date} [defaultDate] - An optional default date to return if parsing fails.
+ * @returns {Date} The parsed date or the default date.
+ * @throws {Error} If parsing fails and no valid default date is provided.
+ */
+export const tryParseDate = (input: unknown, defaultDate?: Date): Date => {
+  if (input instanceof Date && !isNaN(input.getTime())) {
+    return input;
+  }
+
+  if (typeof input === 'string' || typeof input === 'number') {
+    const parsedDate = new Date(input);
+    if (!isNaN(parsedDate.getTime())) {
+      return parsedDate;
+    }
+  }
+
+  if (defaultDate instanceof Date && !isNaN(defaultDate.getTime())) {
+    return defaultDate;
+  }
+
+  throw new Error('Invalid date input and no valid default date provided');
+};

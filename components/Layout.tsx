@@ -29,6 +29,8 @@ import {
   IconUsers,
   IconFileReport,
   IconMedicineSyrup,
+  IconChartSankey,
+  IconChartInfographic,
 } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import { LinksGroup } from './LinksGroup';
@@ -85,6 +87,7 @@ const navLinks = [
   // { label: 'Reports (Beta)', icon: IconFileReport, link: '/app/reports' },
   // { label: 'Settings', icon: IconAdjustments, link: '/app/settings' },
   { label: 'Raw Data / Export Events', icon: IconAdjustments, link: '/app/exports' },
+  // { label: 'Data Explorer', icon: IconChartInfographic, link: '/app/data-explorer' },
 ];
 
 const useStyles = createStyles((theme, _, u) => ({

@@ -102,6 +102,7 @@ export type MedicineForm =
 export type FieldOption = {
   label: string;
   value: string;
+  options?: FieldOption[];
 };
 
 export type BinaryField = HHFieldBase & {
@@ -315,6 +316,7 @@ export type HHForm = {
   is_editable: boolean;
   is_snapshot_form: boolean;
   fields: HHField[];
+  form_fields: HHField[];
   createdAt: Date;
   updatedAt: Date;
 };

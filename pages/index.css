@@ -62,6 +62,10 @@ button.primary {
   color: #1f2937;
 }
 
+.dark-select__multi-value__label {
+  color: #eee !important;
+}
+
 .dark-select-container .dark-i-value__remove {
   background-color: #6b7280;
   border-radius: 9999px;

@@ -87,7 +87,7 @@ const navLinks = [
   // { label: 'Reports (Beta)', icon: IconFileReport, link: '/app/reports' },
   // { label: 'Settings', icon: IconAdjustments, link: '/app/settings' },
   { label: 'Raw Data / Export Events', icon: IconAdjustments, link: '/app/exports' },
-  // { label: 'Data Explorer', icon: IconChartInfographic, link: '/app/data-explorer' },
+  { label: 'Data Explorer', icon: IconChartInfographic, link: '/app/data-explorer' },
 ];
 
 const useStyles = createStyles((theme, _, u) => ({
@@ -136,6 +136,9 @@ export default function AppLayout(props: Props) {
   const { classes } = useStyles();
   const { children = false, title, isLoading } = props;
 
+  const currentPath = router.pathname;
+
+
   const { loadingAuth, authenticated } = useAuthStatus();
   useEffect(() => {
     if (!authenticated && !loadingAuth) {
@@ -167,7 +170,7 @@ export default function AppLayout(props: Props) {
       })}
       // navbarOffsetBreakpoint="sm"
       // asideOffsetBreakpoint="sm"
-      navbar={{ width: { sm: 200, lg: 300 }, breakpoint: 'md', collapsed: { mobile: !opened } }}
+      navbar={{ width: { sm: 200, lg: 300 }, breakpoint: 'md', collapsed: { mobile: !opened, desktop: currentPath.includes('explorer') ? !opened : false } }}
       header={{ height: { base: 50, md: 70 } }}
     >
       <AppShell.Header p="md">
@@ -176,7 +179,7 @@ export default function AppLayout(props: Props) {
             opened={opened}
             onClick={() => setOpened((o) => !o)}
             size="sm"
-            hiddenFrom="md"
+            // hiddenFrom="md"
             color={theme.colors.gray[6]}
             mr="xl"
           />

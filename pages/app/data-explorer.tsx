@@ -13,8 +13,12 @@ import {
   Popover,
   Stack,
   TextInput,
+  Text,
   Title,
   useMantineTheme,
+  Radio,
+  LoadingOverlay,
+  Loader,
 } from '@mantine/core';
 import {
   IconCalendarBolt,
@@ -29,9 +33,10 @@ import {
 } from '@tabler/icons-react';
 import ReactECharts from 'echarts-for-react';
 import { usePatientRegistrationForm } from '../../hooks/usePatientRegistrationForm';
-import { RegistrationForm } from './patients/registration-form';
+import { RegistrationForm, RegistrationFormField } from './patients/registration-form';
 import { listToFieldOptions } from '../../utils/form-builder';
-import { FieldOption, HHForm } from '../../types/Inputs';
+import { getTopNWithOther } from '../../utils/misc';
+import { FieldOption, HHField, HHForm } from '../../types/Inputs';
 import { getAllForms } from './forms-list';
 import { v4 as uuidv4 } from 'uuid';
 import { useDebouncedValue } from '@mantine/hooks';
@@ -42,6 +47,8 @@ import { Appointment } from './appointments/list';
 import { Event } from '../../types/Event';
 import If from '../../components/If';
 import { useEventForms } from '../../hooks/useEventForms';
+import { max } from 'lodash';
+import { DatePickerInput } from '@mantine/dates';
 
 const HIKMA_API = process.env.NEXT_PUBLIC_HIKMA_API;
 
@@ -70,6 +77,19 @@ const operators: { value: ExplorerOperator; label: string }[] = [
   { value: 'is not empty', label: 'is not empty' },
 ];
 
+/**
+ * Returns a registration form field by id
+ * @param fieldId
+ * @param form
+ * @returns
+ */
+const getPatientFormField = (
+  fieldId: string,
+  form: RegistrationForm
+): RegistrationFormField | undefined => {
+  return form.fields.find((f) => f.id === fieldId);
+};
+
 type PatientFiltersProps = {
   form: RegistrationForm;
   filterFieldRules: FilterRule[];
@@ -91,30 +111,69 @@ function PatientFilters({
     .map((f) => ({ label: f?.label?.en || 'error', value: f.id }))
     .filter((f) => f.label !== 'error' && f.value);
 
-  const handleUpdateRule = (
-    field: FilterRule,
-    key: keyof FilterRule,
-    value: FilterRule[keyof FilterRule]
-  ) => {
-    const newRule = {
-      ...field,
-      [key]: value,
-    };
-    onUpdateRule(newRule);
-  };
-
   const handleUpdateRuleField = (field: FilterRule, columnId: string) => {
     const columnName = form.fields.find((f) => f.id === columnId)?.column;
     if (!columnName) {
       return;
     }
-    const newRule = {
+    const fieldType = form.fields.find((f) => f.id === columnId)?.fieldType;
+    const newRule: FilterRule = {
       ...field,
       // VERY IMPORTANT TO CHANGE THE ID TO MATCH THE COLUMN
       fieldId: columnId,
       field: columnName,
+      dataType: explorerDataTypes.includes(fieldType as any) ? fieldType : ('text' as any),
+      value: '',
     };
     onUpdateRule(newRule);
+  };
+
+  const valueOptions = (fieldId: string, form: RegistrationForm) => {
+    const formField = getPatientFormField(fieldId, form);
+    if (!formField) return [];
+
+    console.log({ formField });
+    return formField.options.map((o) => ({ value: o.en, label: o.en }));
+  };
+
+  const getFormValueField = (field: FilterRule, form: RegistrationForm) => {
+    const formField = getPatientFormField(field.fieldId, form);
+    const defaultInput = (
+      <TextInput
+        defaultValue={field.value}
+        label="Value"
+        onChange={(e) => onUpdateRule({ ...field, value: e.target.value })}
+      />
+    );
+
+    if (!formField) return defaultInput;
+
+    if (formField.fieldType === 'select') {
+      return (
+        <>
+          <InputLabel>Value</InputLabel>
+          <Select
+            classNamePrefix="dark-select"
+            className="dark-select-container"
+            defaultValue={field.value}
+            // @ts-ignore
+            options={valueOptions(field.fieldId as any, form)}
+            // @ts-ignore
+            onChange={(opt) => onUpdateRule({ ...field, value: opt?.value || ('' as any) })}
+          />
+        </>
+      );
+    } else if (formField.fieldType === 'date') {
+      const value = field.value ? new Date(field.value) : null;
+      return (
+        <DatePickerInput
+          value={value}
+          onChange={(date) => onUpdateRule({ ...field, value: date?.toISOString() || '' })}
+          label="Value"
+        />
+      );
+    }
+    return defaultInput;
   };
 
   return (
@@ -135,6 +194,8 @@ function PatientFilters({
                 <Select<FieldOption, false>
                   defaultValue={f.fieldId as any}
                   options={fieldNames as any}
+                  className="dark-select-container"
+                  classNamePrefix="dark-select"
                   onChange={(opt) => {
                     handleUpdateRuleField(f, opt?.value || '');
                   }}
@@ -143,6 +204,8 @@ function PatientFilters({
               <Grid.Col span={3}>
                 <InputLabel>Operator</InputLabel>
                 <Select<ExplorerOperator, false>
+                  classNamePrefix="dark-select"
+                  className="dark-select-container"
                   defaultValue={f.operator}
                   // @ts-ignore
                   options={operators as FieldOption[]}
@@ -150,14 +213,7 @@ function PatientFilters({
                   onChange={(opt) => onUpdateRule({ ...f, operator: opt?.value || ('' as any) })}
                 />
               </Grid.Col>
-              <Grid.Col span={4}>
-                {/* TODO: Add support for a dropdown if the form field is a dropdown */}
-                <TextInput
-                  defaultValue={f.value}
-                  label="Value"
-                  onChange={(e) => onUpdateRule({ ...f, value: e.target.value })}
-                />
-              </Grid.Col>
+              <Grid.Col span={4}>{getFormValueField(f, form)}</Grid.Col>
               <Grid.Col sx={{ display: 'flex', alignItems: 'flex-end' }} span={1}>
                 <ActionIcon onClick={() => onRemoveRule(f.id)} color="red">
                   <IconMinus size={15} color="orange" />
@@ -177,32 +233,152 @@ function PatientFilters({
 
 // FIXME: Should the custom fields and their grid be a separate component?
 
-function EventFilters() {
+type EventFiltersProps = {
+  forms: HHForm[];
+  filterFieldRules: FilterRule[];
+  onRemove: () => void;
+  onUpdateRule: (rule: FilterRule) => void;
+  onAddRule: () => void;
+  onRemoveRule: (id: string) => void;
+};
+function EventFilters({
+  forms,
+  filterFieldRules,
+  onRemove,
+  onUpdateRule,
+  onAddRule,
+  onRemoveRule,
+}: EventFiltersProps) {
+  const formOptions = forms
+    .filter((f) => f.form_fields.length > 0)
+    .map((f) => {
+      const fieldOptions = f.form_fields.map((ff) => ({
+        label: ff.name,
+        value: f.id + ';' + ff.id,
+      }));
+      return {
+        label: f.name,
+        options: fieldOptions,
+      };
+    });
+
+  const findFormField = (fieldId: string) => {
+    const [formId, formFieldId] = fieldId.split(';');
+    const form = forms.find((f) => f.id === formId);
+    return form?.form_fields.find((f) => f.id === formFieldId);
+  };
+
+  const valueOptions = (fieldId: string) => {
+    const field = findFormField(fieldId);
+    console.log({ field });
+    // @ts-ignore
+    return field?.options?.map((o) => ({ label: o.label, value: o.value })) || [];
+  };
+
+  const getFormValueField = (field: FilterRule) => {
+    const formField = findFormField(field.fieldId);
+    const defaultInput = (
+      <TextInput
+        value={field.value}
+        label="Value"
+        onChange={(e) => onUpdateRule({ ...field, value: e.target.value })}
+      />
+    );
+
+    if (!formField) return defaultInput;
+
+    if (formField.fieldType === 'options') {
+      return (
+        <>
+          <InputLabel>Value</InputLabel>
+          <Select
+            classNamePrefix="dark-select"
+            className="dark-select-container"
+            defaultValue={field.value}
+            options={valueOptions(field.fieldId as any)}
+            // @ts-ignore
+            onChange={(opt) => onUpdateRule({ ...field, value: opt?.value || ('' as any) })}
+          />
+        </>
+      );
+    } else if (formField.fieldType === 'date') {
+      const value = field.value ? new Date(field.value) : null;
+      return (
+        <DatePickerInput
+          value={value}
+          onChange={(date) => onUpdateRule({ ...field, value: date?.toISOString() || '' })}
+          label="Value"
+        />
+      );
+    }
+    return defaultInput;
+  };
+
   return (
-    <Paper shadow="sm">
-      <Title order={3}>Events</Title>
+    <Paper shadow="sm" p={10}>
+      <Flex justify="space-between">
+        <Title order={3}>Events</Title>
+        <ActionIcon onClick={onRemove} color="red">
+          <IconTrash size={15} color="orange" />
+        </ActionIcon>
+      </Flex>
 
       <div>
-        <Grid>
-          <Grid.Col span={4}>
-            <InputLabel>Field</InputLabel>
-            <Select options={[]} />
-          </Grid.Col>
-          <Grid.Col span={4}>
-            <InputLabel>Operator</InputLabel>
-            <Select options={operators} />
-          </Grid.Col>
-          <Grid.Col span={4}>
-            {/* TODO: Add support for a dropdown if the form field is a dropdown */}
-            <TextInput label="Value" />
-          </Grid.Col>
-        </Grid>
+        {filterFieldRules.map((f) => {
+          return (
+            <Grid key={f.id}>
+              <Grid.Col span={4}>
+                <InputLabel>Field</InputLabel>
+                <Select<FieldOption, false>
+                  defaultValue={f.fieldId as any}
+                  options={formOptions as any}
+                  className="dark-select-container"
+                  classNamePrefix="dark-select"
+                  onChange={(opt) => {
+                    const field = findFormField(opt?.value || '');
+                    onUpdateRule({
+                      ...f,
+                      fieldId: opt?.value || '',
+                      field: opt?.value || '',
+                      dataType: field?.fieldType || ('text' as any),
+                    });
+                  }}
+                />
+              </Grid.Col>
+              <Grid.Col span={3}>
+                <InputLabel>Operator</InputLabel>
+                <Select<ExplorerOperator, false>
+                  classNamePrefix="dark-select"
+                  className="dark-select-container"
+                  defaultValue={f.operator}
+                  // @ts-ignore
+                  options={operators as FieldOption[]}
+                  // @ts-ignore
+                  onChange={(opt) => onUpdateRule({ ...f, operator: opt?.value || ('' as any) })}
+                />
+              </Grid.Col>
+              <Grid.Col span={4}>{getFormValueField(f)}</Grid.Col>
+              <Grid.Col sx={{ display: 'flex', alignItems: 'flex-end' }} span={1}>
+                <ActionIcon onClick={() => onRemoveRule(f.id)} color="red">
+                  <IconMinus size={15} color="orange" />
+                </ActionIcon>
+              </Grid.Col>
+            </Grid>
+          );
+        })}
       </div>
+
+      <Button fullWidth mt={10} variant="transparent" onClick={onAddRule}>
+        Add rule
+      </Button>
     </Paper>
   );
 }
 
 type ExplorerModule = 'patient' | 'event' | 'appointment' | 'prescription';
+
+const explorerDataTypes = ['text', 'number', 'date', 'boolean'] as const;
+type ExplorerDataType = (typeof explorerDataTypes)[number];
 
 const explorerModules: {
   icon: any;
@@ -211,7 +387,7 @@ const explorerModules: {
   isActive: boolean;
 }[] = [
   { icon: IconUser, name: 'Patient', value: 'patient', isActive: true },
-  { icon: IconList, name: 'Event (Coming soon)', value: 'event', isActive: false },
+  { icon: IconList, name: 'Event', value: 'event', isActive: true },
   {
     icon: IconCalendarBolt,
     name: 'Appointment (Coming soon)',
@@ -234,6 +410,7 @@ type FilterRule = {
   fieldId: string; // The id of the field / column
   field: FilterField;
   operator: ExplorerOperator;
+  dataType: ExplorerDataType;
   value: string;
 };
 
@@ -292,6 +469,8 @@ export default function DataExplorer() {
     appointments: [],
   });
 
+  const [loadingServerData, setLoadingServerData] = useState(false);
+
   const addFilterModule = (moduleName: ExplorerModule) => () => {
     if (activeFilterModules.includes(moduleName)) {
       return;
@@ -307,7 +486,7 @@ export default function DataExplorer() {
         ...prevFilters.rules,
         [moduleName]: [
           ...prevFilters.rules[moduleName],
-          { id: uuidv4(), fieldId: '', field: '', operator: '=', value: '' },
+          { id: uuidv4(), fieldId: '', field: '', operator: '', value: '' },
         ],
       },
     }));
@@ -325,6 +504,13 @@ export default function DataExplorer() {
 
   const removeFilterModule = (moduleName: ExplorerModule) => () => {
     setActiveFilterModules(activeFilterModules.filter((mod) => mod !== moduleName));
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      rules: {
+        ...prevFilters.rules,
+        [moduleName]: [],
+      },
+    }));
   };
 
   const setRule = (moduleName: ExplorerModule) => (rule: FilterRule) => {
@@ -380,22 +566,42 @@ export default function DataExplorer() {
       { baseFields: [], attributeFields: [] } as PatientFilter
     );
 
+    // Format event filters into a query string
+    const eventFilters: EventFilter = filters.rules.event.reduce((acc, rule) => {
+      // if the field is an empty string, dont add it
+      if (rule.field === '') return acc;
+      if (rule.fieldId === '') return acc;
+
+      // if the operator is an empty string, dont add it
+      // @ts-expect-error we are setting the string to empty even though it has a type
+      if (rule.operator === '') return acc;
+
+      // if the value is an empty string, dont add it
+      if (rule.value === '') return acc;
+
+      acc.push(rule);
+      return acc;
+    }, [] as EventFilter);
+
     const queryFilters: ExploreQuery = {
       patient: patientFilters,
-      event: [],
+      event: eventFilters,
       appointment: [],
       prescription: [],
     };
 
-    console.log(JSON.stringify(patientFilters, null, 2));
+    console.log(JSON.stringify(queryFilters, null, 2));
 
     // TODO: if the base fields and attribute fields are empty, don't send the query
     if (
       queryFilters.patient.baseFields.length === 0 &&
-      queryFilters.patient.attributeFields.length === 0
+      queryFilters.patient.attributeFields.length === 0 &&
+      queryFilters.event.length === 0
     ) {
       return;
     }
+
+    setLoadingServerData(true);
 
     const res = await axios.post(
       `${HIKMA_API}/v1/admin/data-explorer`,
@@ -409,6 +615,8 @@ export default function DataExplorer() {
         },
       }
     );
+
+    setLoadingServerData(false);
 
     const { patients, events, prescriptions, appointments } = res.data.data || {
       patients: [],
@@ -431,11 +639,22 @@ export default function DataExplorer() {
     rerun();
   }, [debouncedFilters]);
 
+  const loadingData = isLoadingRegistrationForm || isLoadingForms || loadingServerData;
+
   console.log({ filters });
 
   return (
     <AppLayout title="Data Explorer">
-      <Grid>
+      <Text>
+        Data Explorer is a tool that allows you to filter and slice data from your Hikma Health
+        database.
+      </Text>
+
+      <Text>
+        This tool is <strong>*still in development*</strong>, if you need something to appear here,
+        please send a VERY detailed email to ally@hikmahealth.org requesting it.
+      </Text>
+      <Grid pt={32}>
         <Grid.Col span={5} py={18}>
           <Stack gap={32}>
             {activeFilterModules.map((mod) => {
@@ -458,7 +677,17 @@ export default function DataExplorer() {
                     </div>
                   );
                 case 'event':
-                  return <EventFilters key={mod} />;
+                  return (
+                    <EventFilters
+                      key={mod}
+                      forms={eventForms}
+                      onUpdateRule={setRule(mod)}
+                      onAddRule={addRule(mod)}
+                      onRemoveRule={removeRule(mod)}
+                      filterFieldRules={filters.rules.event}
+                      onRemove={removeFilterModule(mod)}
+                    />
+                  );
                 default:
                   return <div key={mod}></div>;
               }
@@ -474,15 +703,16 @@ export default function DataExplorer() {
                 {explorerModules
                   .filter((mod) => !activeFilterModules.includes(mod.value))
                   .map((mod) => (
-                    <Button
-                      key={mod.name}
-                      variant="transparent"
-                      disabled={!mod.isActive}
-                      leftSection={<mod.icon size={16} />}
-                      onClick={addFilterModule(mod.value)}
-                    >
-                      {mod.name}
-                    </Button>
+                    <div key={mod.name}>
+                      <Button
+                        variant="transparent"
+                        disabled={!mod.isActive}
+                        leftSection={<mod.icon size={16} />}
+                        onClick={addFilterModule(mod.value)}
+                      >
+                        {mod.name}
+                      </Button>
+                    </div>
                   ))}
               </Popover.Dropdown>
             </Popover>
@@ -494,7 +724,13 @@ export default function DataExplorer() {
               Rerun
             </Button>
           </Flex>
-          <DataSlicer data={slicerData} dataId={slicerDataId} />
+          <DataSlicer
+            loading={loadingData}
+            data={slicerData}
+            dataId={slicerDataId}
+            patientRegistrationForm={registrationForm}
+            eventForms={eventForms}
+          />
         </Grid.Col>
       </Grid>
     </AppLayout>
@@ -515,65 +751,21 @@ function getYAxisMax(maxValue: number): number {
   }
 }
 
-const DataSlicer = ({ data, dataId }: { data: SlicerData; dataId: string }) => {
-  const options = useMemo(() => {
-    return {
-      grid: { top: 8, right: 8, bottom: 24, left: 36 },
-      xAxis: {
-        type: 'category',
-        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-      },
-      yAxis: {
-        type: 'value',
-      },
-      series: [
-        {
-          data: [820, 932, 901, 934, 1290, 1330, 1320],
-          type: 'line',
-          smooth: true,
-        },
-      ],
-      tooltip: {
-        trigger: 'axis',
-      },
-    };
-  }, [dataId]);
-
-  const patientChartOptions = useMemo(() => {
-    return {
-      grid: { top: 8, right: 8, bottom: 24, left: 36 },
-      xAxis: {
-        type: 'category',
-        data: ['Patients'],
-      },
-      yAxis: {
-        type: 'value',
-        max: getYAxisMax(data.patients.length),
-      },
-      series: [
-        {
-          data: [data.patients.length],
-          type: 'bar',
-        },
-      ],
-      tooltip: {
-        trigger: 'axis',
-      },
-      toolbox: {
-        show: true,
-        feature: {
-          dataView: { readOnly: false },
-          restore: {},
-          saveAsImage: {},
-        },
-      },
-      legend: {
-        data: ['Patients'],
-        bottom: 0,
-      },
-    };
-  }, [dataId]);
-
+const DataSlicer = ({
+  data,
+  dataId,
+  patientRegistrationForm,
+  eventForms,
+  loading,
+}: {
+  data: SlicerData;
+  dataId: string;
+  patientRegistrationForm: RegistrationForm | null;
+  eventForms: HHForm[];
+  loading: boolean;
+}) => {
+  // ';' separated string of formId;formFieldId or 'patients;fieldId' in the case of patients
+  const [sliceBy, setSliceBy] = useState<string | null>(null);
   const isEmptyData = useMemo(() => {
     return (
       data.patients.length === 0 &&
@@ -583,15 +775,269 @@ const DataSlicer = ({ data, dataId }: { data: SlicerData; dataId: string }) => {
     );
   }, [dataId]);
 
+  console.log({ len: data.patients.length });
+
+  const sliceData = useMemo(() => {
+    if (sliceBy === null) {
+      return data;
+    }
+    const [sliceType, sliceId] = sliceBy.split(';');
+    if (sliceType === 'patients') {
+      console.log(sliceId, groupAndCount(data.patients, sliceId));
+      return groupAndCount(data.patients, sliceId);
+    }
+    return null;
+  }, [sliceBy, dataId]);
+
+  console.log({ sliceData });
+
   return (
     <div>
-      <Box>SLICER & DICER (MEASUREMENTS) GO HERE</Box>
-
-      <If show={!isEmptyData}>
+      <If show={patientRegistrationForm !== null && !isEmptyData}>
         <Box>
-          <ReactECharts option={patientChartOptions} />
+          <Flex justify="space-between">
+            <Text size="md" fw={700}>
+              Patient Slices
+            </Text>
+
+            <Button variant="subtle" onClick={() => setSliceBy(null)}>
+              Clear
+            </Button>
+          </Flex>
+
+          <Flex wrap="wrap" gap="sm" py={22}>
+            {patientRegistrationForm?.fields
+              .filter((field) => !field.deleted)
+              .map((field) => (
+                <div key={field.id}>
+                  <Radio
+                    label={field.label.en}
+                    name="patient-slice"
+                    value={'patients;' + (field.baseField ? field.column : field.id)}
+                    onChange={(e) => setSliceBy(e.target.value)}
+                    checked={sliceBy === 'patients;' + (field.baseField ? field.column : field.id)}
+                  />
+                </div>
+              ))}
+          </Flex>
         </Box>
+
+        <If show={data?.events?.length > 0}>
+          <Box>
+            <Flex justify="space-between">
+              <Text size="md">Total Events Returned: {data.events.length}</Text>
+            </Flex>
+          </Box>
+        </If>
       </If>
+
+      <Box pos="relative" pt={20}>
+        <LoadingOverlay visible={loading} loaderProps={{ children: <Loader type="dots" /> }} />
+        <If show={isEmptyData}>
+          <Box>
+            <ReactECharts key={dataId} option={getOptions(['Patients'], [0])} />
+          </Box>
+        </If>
+
+        <If show={!isEmptyData}>
+          <Box>
+            <ReactECharts
+              key={dataId}
+              option={
+                sliceBy && sliceData
+                  ? // @ts-ignore
+                    getSlicedOptions(getTopNWithOther(sliceData, 5)) // Potentially have this number set by the user
+                  : getOptions(['Patients'], [data.patients.length])
+              }
+            />
+          </Box>
+        </If>
+      </Box>
     </div>
   );
+};
+
+// TODO: move to utility functions
+/**
+ * Get Echarts options
+ * @param xAxisData
+ * @param yAxisData
+ * @returns
+ */
+const getOptions = (xAxisData: string[], yAxisData: number[]) => ({
+  color: [
+    '#5470c6',
+    '#91cc75',
+    '#fac858',
+    '#ee6666',
+    '#73c0de',
+    '#3ba272',
+    '#fc8452',
+    '#9a60b4',
+    '#ea7ccc',
+    '#bda29a',
+    '#6e7074',
+  ],
+  grid: { top: 8, right: 8, bottom: 24, left: 0, containLabel: true },
+  xAxis: {
+    type: 'category',
+    data: xAxisData,
+    axisLabel: {
+      interval: 0,
+      rotate: xAxisData.length > 5 ? 30 : 0,
+    },
+  },
+  yAxis: {
+    type: 'value',
+    max: getYAxisMax(max(yAxisData) || 0),
+  },
+  series: [
+    {
+      // name: '2011',
+      type: 'bar',
+      // data: yAxisData,
+      data: yAxisData.map((value, index) => ({
+        value,
+        itemStyle: {
+          color: undefined, // This will automatically use colors from the palette
+        },
+      })),
+      emphasis: {
+        itemStyle: {
+          shadowBlur: 10,
+          shadowOffsetX: 0,
+          shadowColor: 'rgba(0, 0, 0, 0.5)',
+        },
+      },
+    },
+  ],
+  tooltip: {
+    trigger: 'axis',
+    axisPointer: {
+      type: 'shadow',
+    },
+  },
+  toolbox: {
+    show: true,
+    feature: {
+      dataView: { readOnly: false },
+      restore: {},
+      saveAsImage: {
+        title: 'HH Explorer Data',
+        name: 'HH Explorer',
+      },
+    },
+  },
+  legend: {
+    data: ['Patients'],
+    bottom: 0,
+  },
+});
+
+const getSlicedOptions = (data: Record<string, number>) => {
+  const xAxisData = Object.keys(data);
+  const yAxisData = Object.values(data);
+  const options = getOptions(xAxisData, yAxisData);
+
+  // return {
+  //   ...options,
+  //   legend: {
+  //     ...options.legend,
+  //     data: xAxisData,
+  //   },
+  // };
+  return {
+    ...options,
+    legend: {
+      ...options.legend,
+      data: xAxisData,
+    },
+    series: [
+      {
+        ...options.series[0],
+        data: yAxisData.map((value, index) => ({
+          value,
+          name: xAxisData[index],
+          itemStyle: {
+            color: options.color[index % options.color.length],
+          },
+        })),
+      },
+    ],
+  };
+};
+
+const eg = [
+  {
+    additional_attributes: {
+      '6e000dc0-130b-11ef-9002-27cca56014c1': {
+        attribute: 'Color of eyes',
+        boolean_value: null,
+        date_value: null,
+        number_value: null,
+        string_value: 'White',
+      },
+    },
+    camp: 'Manawfa',
+    citizenship: 'Ugandan',
+    created_at: '2024-09-29T05:54:46+00:00',
+    date_of_birth: '2023-04-05',
+    deleted_at: null,
+    external_patient_id: '',
+    given_name: 'Among',
+    government_id: '',
+    hometown: '',
+    id: '54c05590-7e27-11ef-af40-819cf3d230b8',
+    last_modified: '2024-10-18T13:19:35+00:00',
+    phone: '0780669274',
+    server_created_at: 'Thu, 17 Oct 2024 10:29:32 GMT',
+    sex: 'female',
+    surname: 'Peace',
+    updated_at: '2024-10-06T10:23:08+00:00',
+  },
+];
+
+/**
+ * Groups and counts items in a collection based on a specified key.
+ * If the key is not found at the root level, it searches in additional_attributes.
+ *
+ * @param collection - Array of objects containing patient data
+ * @param key - The key to group by (can be a root level key or an additional_attribute UUID)
+ * @returns An object with counts grouped by the values of the specified key
+ *
+ * @example
+ * // Group by sex
+ * const result1 = groupAndCount(patients, 'sex');
+ * // Returns: { male: 25, female: 33, other: 3 }
+ *
+ * // Group by an additional attribute (e.g., eye color)
+ * const result2 = groupAndCount(patients, '6e000dc0-130b-11ef-9002-27cca56014c1');
+ * // Returns: { white: 22, brown: 99, green: 2 }
+ */
+const groupAndCount = (collection: any[], key: string): Record<string, number> => {
+  return collection.reduce((acc: Record<string, number>, item: any) => {
+    let value: string | null = null;
+
+    // Check if the key exists at the root level
+    if (key in item) {
+      value = String(item[key]).toLowerCase();
+    }
+    // Check in additional_attributes if not found at root level
+    else if (item.additional_attributes && item.additional_attributes[key]) {
+      const attribute = item.additional_attributes[key];
+      // Coalesce the different value types to find the non-null one
+      value = (
+        attribute.string_value ??
+        attribute.number_value?.toString() ??
+        attribute.boolean_value?.toString() ??
+        attribute.date_value
+      )?.toLowerCase();
+    }
+
+    if (value) {
+      acc[value] = (acc[value] || 0) + 1;
+    }
+
+    return acc;
+  }, {});
 };

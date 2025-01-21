@@ -139,3 +139,25 @@ export const tryParseDate = (input: unknown, defaultDate?: Date): Date => {
 
   throw new Error('Invalid date input and no valid default date provided');
 };
+
+
+/**
+ * Returns a truncated object containing the top N key-value pairs sorted by value,
+ * with an "other" key summing the remaining values.
+ *
+ * @param {Record<string, number>} obj - The input object to be truncated.
+ * @param {number} topN - The number of top entries to keep.
+ * @returns {Record<string, number>} A new object with the top N entries and an "other" key.
+ */
+export function getTopNWithOther(obj: Record<string, number>, topN: number): Record<string, number> {
+  const sortedEntries = Object.entries(obj).sort((a, b) => b[1] - a[1]);
+  const topEntries = sortedEntries.slice(0, topN);
+  const otherSum = sortedEntries.slice(topN).reduce((sum, [, value]) => sum + value, 0);
+
+  const result: Record<string, number> = Object.fromEntries(topEntries);
+  if (otherSum > 0) {
+    result.other = otherSum;
+  }
+
+  return result;
+}

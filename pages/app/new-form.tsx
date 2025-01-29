@@ -38,7 +38,6 @@ import {
   IconReportMedical,
 } from '@tabler/icons-react';
 import { omit, eq, sortBy } from 'lodash';
-import { Welcome } from '../../components/Welcome/Welcome';
 import { ColorSchemeToggle } from '../../components/ColorSchemeToggle/ColorSchemeToggle';
 import { InputSettingsList } from '../../components/FormBuilder/InputSettingsList';
 import { MedicineInput } from '../../components/FormBuilder/MedicineInput';

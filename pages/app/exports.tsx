@@ -414,7 +414,7 @@ export default function ExportsPage() {
                 return (
                   <Table.Tr key={`event_${idx}`}>
                     {columnNameIds.map((id) => (
-                      <Table.Td key={id}>{String(row[id])}</Table.Td>
+                      <Table.Td key={id}>{columnValueToDisplay(row[id])}</Table.Td>
                     ))}
                   </Table.Tr>
                 );
@@ -425,6 +425,27 @@ export default function ExportsPage() {
       </If>
     </AppLayout>
   );
+}
+
+/**
+ * Givent the column value, return the displayed version
+ * @param {any} columnValue
+ * @returns {string}
+ */
+function columnValueToDisplay(columnValue: any): string {
+  if (!columnValue) return '';
+
+  if (Array.isArray(columnValue)) {
+    if (columnValue?.[0]?.dose !== undefined) {
+      // columnValue[i] has type { dosage: number; dosageUnits: string; name: string; route: string; form: string; }
+      return columnValue.map((dose) => `${dose.name}: ${dose.dose} ${dose.doseUnits}`).join(',\n');
+    } else if (columnValue?.[0]?.desc !== undefined && columnValue?.[0]?.code !== undefined) {
+      // columnValue[i] has type { desc: string; code: string; }
+      return columnValue.map((diagnosis) => `${diagnosis.desc} (${diagnosis.code})`).join(',\n');
+    }
+    console.log('Array: ', columnValue);
+  }
+  return String(columnValue);
 }
 
 function exportTableToExcel(tableID: string, filename = '') {

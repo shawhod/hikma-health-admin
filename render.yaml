@@ -3,6 +3,7 @@
 services:
   - type: web
     name: 'hikma-health-admin'
+    plan: free
     env: node
     buildCommand: npm install; npm run build
 
